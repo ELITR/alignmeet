@@ -1,3 +1,5 @@
+#requires -version 2
+
 Add-Type -Name Window -Namespace Console -MemberDefinition '
 [DllImport("Kernel32.dll")]
 public static extern IntPtr GetConsoleWindow();
