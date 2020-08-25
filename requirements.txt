@@ -1,0 +1,4 @@
+numpy==1.19.1
+simpleaudio==1.0.4
+sox==1.4.0
+PySide2==5.15.0
