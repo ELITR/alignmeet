@@ -12,6 +12,7 @@ from PySide2 import QtGui
 from minutes.minutes_model import MinutesModel
 from annotation import Annotation, Minute
 from transcripts.transcript import Transcript
+from minutes.minutes_editor import MinutesEditor
 
 class Minutes(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):
@@ -52,6 +53,7 @@ class Minutes(QWidget):
 
         minutes_view = TableView(self)
         minutes_view.setContextMenuPolicy(Qt.ActionsContextMenu)
+        minutes_view.setItemDelegateForColumn(0, MinutesEditor(self))
         self.minutes_view = minutes_view
         self.model = MinutesModel(self.annotation)
         minutes_view.setModel(self.model)
@@ -72,9 +74,43 @@ class Minutes(QWidget):
         delete.triggered.connect(self._delete_triggered)
         self.delete = delete
         minutes_view.addAction(delete)
+        
+        a = QAction('', self)
+        a.setSeparator(True)
+        minutes_view.addAction(a)
+
+        right = QAction('Indent right', minutes_view)
+        right.setShortcuts(['Shift+R', 'Shift+Del'])
+        right.triggered.connect(self._right_triggered)
+        self.right = right
+        minutes_view.addAction(right)
+
+        left = QAction('Indent left', minutes_view)
+        left.setShortcuts(['Shift+L', 'Shift+Del'])
+        left.triggered.connect(self._left_triggered)
+        self.left = left
+        minutes_view.addAction(left)
+
         minutes_view.minute_selected.connect(self._minute_selected)
         self.setLayout(layout)
         edit.setChecked(False)
+
+    @Slot()
+    def _right_triggered(self):
+        r = self.selected_rows()
+        for idx in r:
+            m = self.annotation.get_minute(idx)
+            m.text = "\t{}".format(m.text)
+        self.annotation.modified = True
+
+    @Slot()
+    def _left_triggered(self):
+        r = self.selected_rows()
+        for idx in r:
+            m = self.annotation.get_minute(idx)
+            if m.text.startswith('\t'):
+                m.text = m.text[1:]
+        self.annotation.modified = True
 
     @Slot()
     def _insert_triggered(self):
@@ -97,6 +133,8 @@ class Minutes(QWidget):
     def _editation(self, s):
         self.insert.setEnabled(s)
         self.delete.setEnabled(s)
+        self.left.setEnabled(s)
+        self.right.setEnabled(s)
         if s:
             self.minutes_view.setEditTriggers(QAbstractItemView.AllEditTriggers)
         else:
