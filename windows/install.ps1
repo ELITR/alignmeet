@@ -5,6 +5,12 @@ if (Test-Path program)
     Remove-Item 'program' -Recurse;
 }
 
+if (Test-Path env)
+{
+    Remove-Item 'env' -Recurse;
+}
+
+
 $p = &{py -V} 2>&1
 # check if an ErrorRecord was returned
 $version = if($p -is [System.Management.Automation.ErrorRecord])
@@ -37,13 +43,16 @@ py -m pip install --user virtualenv
 py -m venv env
 .\env\Scripts\activate
 
+Write-Host 'Downloading Annotations...';
 Invoke-WebRequest "https://github.com/ELITR/Annotations/archive/master.zip" -outfile "master.zip"
 Expand-Archive -LiteralPath "master.zip" -DestinationPath "program\"
 Remove-Item "master.zip"
 
 
-Invoke-WebRequest "https://deac-riga.dl.sourceforge.net/project/sox/sox/14.4.2/sox-14.4.2-win32.exe"  -outfile "sox-14.4.2-win32.exe"
-.\sox-14.4.2-win32.exe
+Write-Host 'Downloading sox...';
+Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/sox-14.4.2-win32.exe"  -outfile "sox-14.4.2-win32.exe"
+Write-Host 'Use the installation wizard to complete the SOX installation.';
+Start-Process .\sox-14.4.2-win32.exe -Verb RunAs -Wait
 Remove-Item "sox-14.4.2-win32.exe"
 
 pip install -r program/Annotations-master/requirements.txt
