@@ -24,7 +24,7 @@ class Transcript(QTableView):
         s = self.rowAt(0)
         e = self.rowAt(self.height())
         if e < 0:
-            e = self.model().rowCount() - 1
+            e = self.model().rowCount()
         return s, e
 
     def dataChanged(self, QModelIndex, QModelIndex_, roles=[]):

@@ -95,6 +95,10 @@ class Transcripts(QWidget):
         self.delete = delete
         transcript.addAction(delete)
 
+        a = QAction('', self)
+        a.setSeparator(True)
+        transcript.addAction(a)
+
         reset = QAction('Reset minutes', transcript)
         reset.setShortcuts(['Ctrl+R'])
         reset.triggered.connect(self._reset_triggered)
@@ -106,6 +110,10 @@ class Transcripts(QWidget):
         resetp.triggered.connect(self._resetp_triggered)
         self.resetp = resetp
         transcript.addAction(resetp)
+
+        a = QAction('', self)
+        a.setSeparator(True)
+        transcript.addAction(a)
 
         expand = QAction('Expand speakers', transcript)
         expand.setShortcuts(['Ctrl+E'])
@@ -133,8 +141,8 @@ class Transcripts(QWidget):
     def _visible_rows_changed(self, rows):
         m = set()
         s,e = rows
-        if s >= 0 and e < self.model.rowCount():
-            for i in range(s, e + 1):
+        if s >= 0:
+            for i in range(s, e):
                 mi = self.annotation.get_dialog_act(i).minute
                 if mi is not None:
                     m.add(mi)

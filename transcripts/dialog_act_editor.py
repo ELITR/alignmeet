@@ -32,7 +32,7 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
                     pos = self.editor.cursorPosition()
                     self.textToSplit = pos
             if event.key() == QtCore.Qt.Key_Escape:
-                if self.editor.text() == '' and self.last_val == '':
+                if self.editor.toPlainText() == '' and self.last_val == '':
                     self.remove_row.emit()
         return super().eventFilter(source, event)
 
