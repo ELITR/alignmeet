@@ -22,6 +22,7 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
     def createEditor(self, parent, option, index):
         editor = QtWidgets.QTextEdit(parent)
         editor.setWordWrapMode(QtGui.QTextOption.WordWrap)
+        editor.setAcceptRichText(False)
         self.editor = editor
         return editor
 

@@ -13,14 +13,31 @@ then
     exit 1
 fi
 
+updated=0
+function update {
+    if [ ! $updated ]
+    then
+        sudo apt update
+        updated=1
+    fi
+}
+
 if [[ `dpkg --list | grep python3-venv | wc -l` -eq 0 ]]
 then
+    update
     sudo apt install python3-venv
 fi
 
 if [[ `dpkg --list | grep sox | wc -l` -eq 0 ]]
 then
+    update
     sudo apt install sox
+fi
+
+if [[ `dpkg --list | grep ffmpeg | wc -l` -eq 0 ]]
+then
+    update
+    sudo apt install ffmpeg
 fi
 
 deactivate

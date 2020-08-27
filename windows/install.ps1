@@ -48,21 +48,19 @@ Invoke-WebRequest "https://github.com/ELITR/Annotations/archive/master.zip" -out
 Expand-Archive -LiteralPath "master.zip" -DestinationPath "program\"
 Remove-Item "master.zip"
 
-
-Write-Host 'Downloading sox...';
-Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/sox-14.4.2-win32.exe"  -outfile "sox-14.4.2-win32.exe"
-Write-Host 'Use the installation wizard to complete the SOX installation.';
-Start-Process .\sox-14.4.2-win32.exe -Verb RunAs -Wait
-Remove-Item "sox-14.4.2-win32.exe"
+Write-Host 'Downloading ffmpeg and sox...';
+Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/elitr/bin.zip"  -outfile "bin.zip"
+Expand-Archive -LiteralPath "bin.zip" -DestinationPath "program\"
+Remove-Item "bin.zip"
 
 pip install -r program/Annotations-master/requirements.txt
 deactivate
 
-$p = (pwd).Path
+$p = (Get-Location).Path
 $WshShell = New-Object -comObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("Annotations.lnk")
 $Shortcut.TargetPath  = "pythonw"
-$Shortcut.Arguments = "program\\Annotations-master\\run.py"
+$Shortcut.Arguments = -join($p, "\program\Annotations-master\run.py")
 $Shortcut.WorkingDirectory = $p
 $Shortcut.Save()
 exit(0)
