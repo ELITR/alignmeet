@@ -5,9 +5,11 @@ from settings import Settings
 QCoreApplication.setOrganizationName("UFAL")
 QCoreApplication.setOrganizationDomain("ufal.ms.mff.cuni.cz")
 QCoreApplication.setApplicationName("Annotations")
+
 if os.name == 'nt':
     sys.path.append(Settings.get_value('sox_path', r'program/bin'))
     os.environ["PATH"] += os.pathsep + r'program/bin'
+    os.environ['PYTHON_VLC_MODULE_PATH'] = """C:\Program Files\VideoLAN\VLC"""
 
 from PySide2.QtWidgets import QApplication
 from annotations import Annotations

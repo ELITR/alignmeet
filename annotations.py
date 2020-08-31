@@ -142,17 +142,19 @@ class Annotations(QMainWindow):
             if create:
                 t = os.path.join(path, 'transcripts')
                 os.mkdir(t)
+                m = os.path.join(path, 'annotations')
+                os.mkdir(m)
                 m = os.path.join(path, 'minutes')
                 os.mkdir(m)
-                io.open(os.path.join(m,'minutes.txt'),'w').write('minute...')
-                io.open(os.path.join(t,'transcript.txt'),'w').write('dialog act...')
+                io.open(os.path.join(m,'minutes.txt'),'w').write('')
+                io.open(os.path.join(t,'transcript.txt'),'w').write('')
             if self._check_path(path):
                 self.annotation.set_path(path)
                 self.transcripts.setEnabled(True)
                 self.minutes.setEnabled(True)
                 self.problems.setEnabled(True)
                 for f in os.listdir(path):
-                    if f.endswith('wav'):
+                    if os.path.isfile(os.path.join(path, f)):
                         self.player.open_audio(os.path.join(path, f))
                         break
             else:
@@ -176,7 +178,8 @@ class Annotations(QMainWindow):
         #dlg.setMimeTypeFilters(['audio/wav', 'audio/aac', 'audio/mpeg', 'video/mpeg'])
         if dlg.exec_():
             if len(dlg.selectedFiles()) > 0 and os.path.exists(dlg.selectedFiles()[0]):
-                self.player.open_audio(dlg.selectedFiles()[0])
+                file = dlg.selectedFiles()[0]
+                self.player.open_audio(file)
 
     def closeEvent(self, event):
         s = QSettings(self)

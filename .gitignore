@@ -6,3 +6,4 @@ minutes/__pycache__/
 demo/
 demo/transcripts/asr_transcript
 demo/transcripts/corrected_transcript
+program/

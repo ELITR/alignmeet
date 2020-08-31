@@ -77,6 +77,9 @@ class Annotation(QObject):
         self._das = []
         self._minutes = []
 
+    def get_path(self):
+        return self._path
+
     @property
     def modified(self):
         return self._modified
