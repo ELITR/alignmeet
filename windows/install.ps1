@@ -48,10 +48,22 @@ Invoke-WebRequest "https://github.com/ELITR/Annotations/archive/master.zip" -out
 Expand-Archive -LiteralPath "master.zip" -DestinationPath "program\"
 Remove-Item "master.zip"
 
-Write-Host 'Downloading ffmpeg and sox...';
-Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/elitr/bin.zip"  -outfile "bin.zip"
-Expand-Archive -LiteralPath "bin.zip" -DestinationPath "program\"
-Remove-Item "bin.zip"
+$arch = py -c "import struct
+print(struct.calcsize('P') * 8)"
+
+if (($arch -Gt 32 -And -Not (Test-Path "C:\Program Files\VideoLAN\VLC")) -Or
+($arch -Lt 64 -And -Not (Test-Path "C:\Program Files (x86)\VideoLAN\VLC")))
+{
+    Write-Host 'Downloading VLC...';
+    if ($arch -Gt 32){
+        Invoke-WebRequest "http://download.videolan.org/pub/videolan/vlc/3.0.9.2/win64/vlc-3.0.9.2-win64.zip"  -outfile "vlc.zip"
+    }
+    else{
+        Invoke-WebRequest "http://download.videolan.org/pub/videolan/vlc/3.0.9.2/win32/vlc-3.0.9.2-win32.zip"  -outfile "vlc.zip"
+    }
+    Expand-Archive -LiteralPath "vlc.zip" -DestinationPath "program\"
+    Remove-Item "vlc.zip"
+}
 
 pip install -r program/Annotations-master/requirements.txt
 deactivate
