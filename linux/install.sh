@@ -28,16 +28,10 @@ then
     sudo apt install python3-venv
 fi
 
-if [[ `dpkg --list | grep sox | wc -l` -eq 0 ]]
+if [[ `dpkg --list | grep vlc | wc -l` -eq 0 ]]
 then
     update
-    sudo apt install sox
-fi
-
-if [[ `dpkg --list | grep ffmpeg | wc -l` -eq 0 ]]
-then
-    update
-    sudo apt install ffmpeg
+    sudo apt install vlc
 fi
 
 deactivate
