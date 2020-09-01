@@ -56,10 +56,10 @@ if (($arch -Gt 32 -And -Not (Test-Path "C:\Program Files\VideoLAN\VLC")) -Or
 {
     Write-Host 'Downloading VLC...';
     if ($arch -Gt 32){
-        Invoke-WebRequest "http://download.videolan.org/pub/videolan/vlc/3.0.9.2/win64/vlc-3.0.9.2-win64.zip"  -outfile "vlc.zip"
+        Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/elitr/vlc-3.0.9.2-win64.zip"  -outfile "vlc.zip"
     }
     else{
-        Invoke-WebRequest "http://download.videolan.org/pub/videolan/vlc/3.0.9.2/win32/vlc-3.0.9.2-win32.zip"  -outfile "vlc.zip"
+        Invoke-WebRequest "http://ufallab.ms.mff.cuni.cz/~polak/elitr/vlc-3.0.9.2-win32.zip"  -outfile "vlc.zip"
     }
     Expand-Archive -LiteralPath "vlc.zip" -DestinationPath "program\"
     Remove-Item "vlc.zip"
