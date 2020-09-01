@@ -71,7 +71,7 @@ deactivate
 $p = (Get-Location).Path
 $WshShell = New-Object -comObject WScript.Shell
 $Shortcut = $WshShell.CreateShortcut("Annotations.lnk")
-$Shortcut.TargetPath  = "pythonw"
+$Shortcut.TargetPath  = -join($p, "\env\Scripts\pythonw")
 $Shortcut.Arguments = -join($p, "\program\Annotations-master\run.py")
 $Shortcut.WorkingDirectory = $p
 $Shortcut.Save()
