@@ -149,6 +149,8 @@ class Annotation(QObject):
         data = []
         with open(full_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
+                if line is None or len(line) < 1 or not any(map(lambda x: x.isalpha(), list(line))):
+                    continue
                 line = line[:-1] #remove newline
                 s = line.split(SEPARATOR)
                 data.append(DialogAct(*s))
