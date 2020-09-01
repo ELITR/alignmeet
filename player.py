@@ -170,11 +170,14 @@ class Player(QWidget):
         if self.player is not None:
             if self.player.is_playing():
                 self.player.pause()
+                self.play_button.setText("Play")
             elif not self.player.will_play():
                 self.open_audio(self.file)
                 self.player.play()
+                self.play_button.setText("Stop")
             else:
                 self.player.play()
+                self.play_button.setText("Stop")
 
     @Slot()
     def forward(self):
