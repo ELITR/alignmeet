@@ -13,6 +13,7 @@ from minutes.minutes_model import MinutesModel
 from annotation import Annotation, Minute
 from transcripts.transcript import Transcript
 from minutes.minutes_editor import MinutesEditor
+from combobox import ComboBox
 
 class Minutes(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):
@@ -34,11 +35,12 @@ class Minutes(QWidget):
         label.setText('Minutes:')
         label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
-        minutes_ver = QComboBox(self)
+        minutes_ver = ComboBox(self)
+        self.minutes_ver = minutes_ver
         minutes_ver.setEditable(False)
         minutes_ver.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         minutes_ver.currentTextChanged.connect(self._minutes_changed)
-        self.minutes_ver = minutes_ver
+        minutes_ver.focused.connect(self.update_minutes)
 
         edit = QCheckBox(self)
         edit.setText("edit minutes")
@@ -94,6 +96,16 @@ class Minutes(QWidget):
         minutes_view.minute_selected.connect(self._minute_selected)
         self.setLayout(layout)
         edit.setChecked(False)
+
+    @Slot()
+    def update_minutes(self):
+        old = set(self.annotation.minutes_files)
+        self.annotation.refresh()
+        new = set(self.annotation.minutes_files)
+        if len(old-new) > 0 or len(new-old) > 0:
+            self.minutes_ver.clear()
+            self.minutes_ver.addItems(new)
+
 
     @Slot()
     def _right_triggered(self):

@@ -1,4 +1,5 @@
 from os import path, listdir
+import os
 import re
 
 from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal, QObject
@@ -63,6 +64,7 @@ class Annotation(QObject):
 
     def __init__(self, parent = None):
         super(Annotation, self).__init__(parent)
+        self._path = ""
         self._modified = False
         self._transcript_file = None
         self._minutes_file = None
@@ -132,6 +134,11 @@ class Annotation(QObject):
         self.minutes_files = listdir(path.join(self._path, MINUTES_FOLDER))
         self.transcript_files = listdir(path.join(self._path, TRANSCRIPT_FOLDER))
         self.path_changed.emit()
+
+    def refresh(self):
+        if os.path.exists(self._path):
+            self.minutes_files = listdir(path.join(self._path, MINUTES_FOLDER))
+            self.transcript_files = listdir(path.join(self._path, TRANSCRIPT_FOLDER))
 
     def _prevent(self):
         if self.modified:

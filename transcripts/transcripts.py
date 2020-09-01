@@ -2,7 +2,7 @@ import os
 import io
 from copy import copy
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction
 from PySide2.QtCore import QItemSelectionModel, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2 import QtWidgets
@@ -13,6 +13,7 @@ from transcripts.speaker_editor import SpeakerEditor
 from transcripts.dialog_act_editor import DialogActEditor
 from transcripts.transcript import Transcript
 from annotation import Annotation, DialogAct
+from combobox import ComboBox
 
 class Transcripts(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):
@@ -20,10 +21,6 @@ class Transcripts(QWidget):
         self.annotation = annotation
         self.annotation.path_changed.connect(self.set_path)
         self._gui_setup()
-
-    def set_path(self):
-        self.transcript_ver.clear()
-        self.transcript_ver.addItems(self.annotation.transcript_files)
         
     def _gui_setup(self):
         layout = QVBoxLayout(self)
@@ -33,10 +30,11 @@ class Transcripts(QWidget):
         label.setText('Transcript:')
         label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
-        transcript_ver = QComboBox(self)
+        transcript_ver = ComboBox(self)
         transcript_ver.setEditable(False)
         transcript_ver.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
         transcript_ver.currentTextChanged.connect(self._transcript_changed)
+        transcript_ver.focused.connect(self.update_transcripts)
         self.transcript_ver = transcript_ver
 
         transcript_layout = QHBoxLayout()
@@ -123,6 +121,20 @@ class Transcripts(QWidget):
 
         self.setLayout(layout)
         edit.setChecked(False)
+
+    
+    def set_path(self):
+        self.transcript_ver.clear()
+        self.transcript_ver.addItems(self.annotation.transcript_files)
+
+    @Slot()
+    def update_transcripts(self):
+        old = set(self.annotation.transcript_files)
+        self.annotation.refresh()
+        new = set(self.annotation.transcript_files)
+        if len(old-new) > 0 or len(new-old) > 0:
+            self.transcript_ver.clear()
+            self.transcript_ver.addItems(new)
 
     @Slot()
     def _expand_triggered(self):
