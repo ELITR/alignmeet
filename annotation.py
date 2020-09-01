@@ -198,16 +198,19 @@ class Annotation(QObject):
         full_path = path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file)
         with open(full_path, 'w', encoding='utf-8') as f:
             for da in self._das:
-                f.write("".join([
-                    da.text,
-                    SEPARATOR,
-                    da.speaker,
-                    SEPARATOR,
-                    str(da.start),
-                    SEPARATOR,
-                    str(da.end),
-                    '\n'
-                ]))
+                try:
+                    f.write("".join([
+                        da.text,
+                        SEPARATOR,
+                        da.speaker,
+                        SEPARATOR,
+                        str(da.start),
+                        SEPARATOR,
+                        str(da.end),
+                        '\n'
+                    ]))
+                except:
+                    pass
 
     def _save_minutes(self):
         full_path = path.join(self._path, MINUTES_FOLDER, self._minutes_file)
