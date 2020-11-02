@@ -14,6 +14,8 @@ function Hide-Console
     [Console.Window]::ShowWindow($consolePtr, 0)
 }
 Hide-Console
-
-.\env\Scripts\activate
-py program/Annotations-master/run.py 
+try{
+    .\env\Scripts\activate
+}
+catch{}
+pythonw program/minuting-annotation-tool/run.py 
