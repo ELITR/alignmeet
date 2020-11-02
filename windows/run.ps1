@@ -18,4 +18,4 @@ try{
     .\env\Scripts\activate
 }
 catch{}
-pythonw program/minuting-annotation-tool/run.py 
+pythonw program/Annotations-master/run.py 

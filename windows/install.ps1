@@ -57,11 +57,11 @@ if ($venv -Eq 'y') {
     py -m pip install --user virtualenv
     py -m venv env
     .\env\Scripts\activate
-    pip install -r program/minuting-annotation-tool/requirements.txt
+    pip install -r program/minuting-annotation-tool-master/requirements.txt
     deactivate
 }
 else {
-    py -m pip install --user -r program/minuting-annotation-tool/requirements.txt
+    py -m pip install --user -r program/minuting-annotation-tool-master/requirements.txt
 }
 
 $arch = py -c "import struct
@@ -91,7 +91,7 @@ if ($venv -Eq 'y') {
 else {
     $Shortcut.TargetPath = "pythonw"
 }
-$Shortcut.Arguments = -join ($p, "\program\minuting-annotation-tool\run.py")
+$Shortcut.Arguments = -join ($p, "\program\minuting-annotation-tool-master\run.py")
 $Shortcut.WorkingDirectory = $p
 $Shortcut.Save()
 
