@@ -131,14 +131,14 @@ class Annotation(QObject):
     def set_path(self, p):
         self._prevent()
         self._path = p
-        self.minutes_files = listdir(path.join(self._path, MINUTES_FOLDER))
-        self.transcript_files = listdir(path.join(self._path, TRANSCRIPT_FOLDER))
+        self.minutes_files = listdir(path.normpath(path.join(self._path, MINUTES_FOLDER)))
+        self.transcript_files = listdir(path.normpath(path.join(self._path, TRANSCRIPT_FOLDER)))
         self.path_changed.emit()
 
     def refresh(self):
         if os.path.exists(self._path):
-            self.minutes_files = listdir(path.join(self._path, MINUTES_FOLDER))
-            self.transcript_files = listdir(path.join(self._path, TRANSCRIPT_FOLDER))
+            self.minutes_files = listdir(path.normpath(path.join(self._path, MINUTES_FOLDER)))
+            self.transcript_files = listdir(path.normpath(path.join(self._path, TRANSCRIPT_FOLDER)))
 
     def _prevent(self):
         if self.modified:
@@ -152,7 +152,7 @@ class Annotation(QObject):
     def open_transcript(self, file):
         self._prevent()
         self._transcript_file = file
-        full_path = path.join(self._path, TRANSCRIPT_FOLDER, file)
+        full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, file))
         data = []
         with open(full_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
@@ -169,6 +169,7 @@ class Annotation(QObject):
         self._prevent()
         self._minutes_file = file
         full_path = path.join(self._path, MINUTES_FOLDER, file)
+        full_path = path.normpath(full_path)
         data = []
         with open(full_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
@@ -189,6 +190,7 @@ class Annotation(QObject):
         )
         self._annotation_file = af
         full_path = path.join(self._path, ANNOTATIONS_FOLDER, af)
+        full_path = path.normpath(full_path)
         if path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
                 for line in f.readlines():
@@ -205,6 +207,7 @@ class Annotation(QObject):
 
     def _save_transcript(self):
         full_path = path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file)
+        full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
             for da in self._das:
                 try:
@@ -223,6 +226,7 @@ class Annotation(QObject):
 
     def _save_minutes(self):
         full_path = path.join(self._path, MINUTES_FOLDER, self._minutes_file)
+        full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
             for m in self._minutes:
                 f.write('{}\n'.format(m.text))
@@ -234,6 +238,7 @@ class Annotation(QObject):
         )
         self._annotation_file = af
         full_path = path.join(self._path, ANNOTATIONS_FOLDER, af)
+        full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
             for idx, da in enumerate(self._das):
                 if da.minute != None or da.problem != None:

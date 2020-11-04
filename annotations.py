@@ -141,10 +141,13 @@ class Annotations(QMainWindow):
             path = dlg.selectedFiles()[0]
             if create:
                 t = os.path.join(path, 'transcripts')
+                t = os.path.normpath(t)
                 os.mkdir(t)
                 m = os.path.join(path, 'annotations')
+                m = os.path.normpath(m)
                 os.mkdir(m)
                 m = os.path.join(path, 'minutes')
+                m = os.path.normpath(m)
                 os.mkdir(m)
                 io.open(os.path.join(m,'minutes.txt'),'w').write('')
                 io.open(os.path.join(t,'transcript.txt'),'w').write('')
@@ -154,8 +157,8 @@ class Annotations(QMainWindow):
                 self.minutes.setEnabled(True)
                 self.problems.setEnabled(True)
                 for f in os.listdir(path):
-                    if os.path.isfile(os.path.join(path, f)):
-                        self.player.open_audio(os.path.join(path, f))
+                    if os.path.isfile(os.path.normpath(os.path.join(path, f))):
+                        self.player.open_audio(os.path.normpath(os.path.join(path, f)))
                         break
             else:
                 msg = QMessageBox()
@@ -165,7 +168,7 @@ class Annotations(QMainWindow):
                 msg.exec_()
 
     def _check_path(self, path):
-        return os.path.exists(os.path.join(path, 'transcripts'))
+        return os.path.exists(os.path.normpath(os.path.join(path, 'transcripts')))
 
     @Slot()
     def save(self):
