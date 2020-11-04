@@ -195,10 +195,10 @@ class Annotation(QObject):
             with open(full_path, 'r', encoding='utf-8') as f:
                 for line in f.readlines():
                     line = line.strip().split(' ')
-                    idx = int(line[0])
+                    idx = int(line[0]) - 1
                     d = self._das[idx]
-                    minute = int(line[1]) if line[1].isdigit() else None
-                    problem = int(line[2]) if line[2].isdigit() else None
+                    minute = int(line[1]) - 1 if line[1].isdigit() else None
+                    problem = int(line[2]) - 1 if line[2].isdigit() else None
                     d.problem = problem
                     try:
                         d.minute = self._minutes[minute]
@@ -244,9 +244,9 @@ class Annotation(QObject):
                 if da.minute != None or da.problem != None:
                     midx = self.minutes_index_map[da.minute]
                     f.write('{} {} {}\n'.format(
-                        idx,
-                        midx,
-                        da.problem
+                        idx + 1,
+                        midx + 1 if midx is not None else midx,
+                        da.problem + 1 if da.problem is not None else da.problem
                     ))
 
     def save(self):

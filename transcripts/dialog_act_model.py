@@ -46,7 +46,7 @@ class DAModel(QtCore.QAbstractTableModel):
                             d.end // 60,
                             d.end - (d.end // 60) * 60,
                         )
-                return "{}".format(index)
+                return "{}".format(index + 1)
         else:
             return super().headerData(index, orientation, role=role)
 
