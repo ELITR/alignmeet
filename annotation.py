@@ -34,7 +34,7 @@ class DialogAct:
     def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None):
         self._speaker = speaker
         if speaker is None or len(speaker) < 1:
-            for f in re.findall('^\s*\([a-zA-Z]+\)', text):
+            for f in re.findall('^\s*\([^)]+\)', text):
                 speaker = f[1:-1]
                 text = text.replace(f, '', 1)
                 break
