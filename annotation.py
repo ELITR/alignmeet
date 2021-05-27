@@ -10,6 +10,7 @@ SEPARATOR = '^'
 TRANSCRIPT_FOLDER = 'transcripts'
 MINUTES_FOLDER = 'minutes'
 ANNOTATIONS_FOLDER = 'annotations'
+EVALUATIONS_FOLDER = 'evaluations'
 
 class Minute:
     max_id = -1
@@ -78,6 +79,7 @@ class Annotation(QObject):
 
         self._das = []
         self._minutes = []
+        self._evaluation = [1.0]*6
 
     def get_path(self):
         return self._path
@@ -163,6 +165,7 @@ class Annotation(QObject):
                 data.append(DialogAct(*s))
             self._das = data
         self.open_annotation()
+        self.open_evaluation()
         self.modified = False
 
     def open_minutes(self, file):
@@ -178,6 +181,7 @@ class Annotation(QObject):
             self._minutes = data
             self._make_minutes_index_map()
         self.open_annotation()
+        self.open_evaluation()
         self.modified = False
 
     def open_annotation(self):
@@ -204,6 +208,21 @@ class Annotation(QObject):
                         d.minute = self._minutes[minute]
                     except:
                         d.minute = None
+
+    def open_evaluation(self):
+        self._evaluation = [1.0]*6
+        af = "{}+{}".format(
+            self._transcript_file,
+            self._minutes_file
+        )
+        self._evaluation_file = af
+        full_path = path.join(self._path, EVALUATIONS_FOLDER, af)
+        full_path = path.normpath(full_path)
+        if path.exists(full_path):
+            with open(full_path, 'r', encoding='utf-8') as f:
+                self._evaluation = [
+                    float(line.strip()) for line in f.readlines()
+                ]
 
     def _save_transcript(self):
         full_path = path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file)
@@ -249,8 +268,21 @@ class Annotation(QObject):
                         da.problem + 1 if da.problem is not None else da.problem
                     ))
 
+    def _save_evaluation(self):
+        af = "{}+{}".format(
+            self._transcript_file,
+            self._minutes_file
+        )
+        self._evaluation_file = af
+        full_path = path.join(self._path, EVALUATIONS_FOLDER, af)
+        full_path = path.normpath(full_path)
+        with open(full_path, 'w', encoding='utf-8') as f:
+            for item in self._evaluation:
+                f.write(f'{item}\n')
+
     def save(self):
         self._save_annotation()
+        self._save_evaluation()
         self._save_minutes()
         self._save_transcript()
         self.modified = False

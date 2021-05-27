@@ -11,6 +11,7 @@ from player import Player
 from annotation import Annotation
 from problems import Problems
 from settings import Settings
+from evaluation import Evaluation
 
 class Annotations(QMainWindow):
 
@@ -61,6 +62,11 @@ class Annotations(QMainWindow):
         player.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.player = player
         panel_right.addWidget(player)
+
+        evaluation = Evaluation(self)
+        evaluation.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        self.evaluation = evaluation
+        panel_right.addWidget(evaluation)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -156,6 +162,8 @@ class Annotations(QMainWindow):
                 self.transcripts.setEnabled(True)
                 self.minutes.setEnabled(True)
                 self.problems.setEnabled(True)
+                self.evaluation.setEnabled(True)
+                self.evaluation.open_evaluation(self.annotation)
                 for f in os.listdir(path):
                     if os.path.isfile(os.path.normpath(os.path.join(path, f))):
                         self.player.open_audio(os.path.normpath(os.path.join(path, f)))
