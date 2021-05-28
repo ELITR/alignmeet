@@ -1,6 +1,7 @@
 from os import path, listdir
 import os
 import re
+import glob
 
 from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal, QObject
 from PySide2.QtGui import QColor
@@ -133,14 +134,28 @@ class Annotation(QObject):
     def set_path(self, p):
         self._prevent()
         self._path = p
-        self.minutes_files = listdir(path.normpath(path.join(self._path, MINUTES_FOLDER)))
-        self.transcript_files = listdir(path.normpath(path.join(self._path, TRANSCRIPT_FOLDER)))
+        self._refresh_files()
         self.path_changed.emit()
 
     def refresh(self):
         if os.path.exists(self._path):
+            self._refresh_files()
+
+    def _refresh_files(self):
+        def clean_glob(files):
+            return list(map(lambda f: f.split('/')[-1].split('\\')[-1], files))
+        if os.path.exists(path.normpath(path.join(self._path, MINUTES_FOLDER))):
             self.minutes_files = listdir(path.normpath(path.join(self._path, MINUTES_FOLDER)))
+        else:
+            folder = path.normpath(path.join(self._path, 'minutes*.txt'))
+            self.minutes_files = clean_glob(glob.glob(folder))
+
+        if os.path.exists(path.normpath(path.join(self._path, TRANSCRIPT_FOLDER))):
             self.transcript_files = listdir(path.normpath(path.join(self._path, TRANSCRIPT_FOLDER)))
+        else:
+            folder = path.normpath(path.join(self._path, 'transcript*.txt'))
+            self.transcript_files = clean_glob(glob.glob(folder))
+
 
     def _prevent(self):
         if self.modified:
@@ -155,6 +170,8 @@ class Annotation(QObject):
         self._prevent()
         self._transcript_file = file
         full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, file))
+        if not os.path.exists(full_path):
+            full_path = path.normpath(path.join(self._path, file))
         data = []
         with open(full_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
@@ -171,8 +188,9 @@ class Annotation(QObject):
     def open_minutes(self, file):
         self._prevent()
         self._minutes_file = file
-        full_path = path.join(self._path, MINUTES_FOLDER, file)
-        full_path = path.normpath(full_path)
+        full_path = path.normpath(path.join(self._path, MINUTES_FOLDER, file))
+        if not os.path.exists(full_path):
+            full_path = path.normpath(path.join(self._path, file))
         data = []
         with open(full_path, 'r', encoding='utf-8') as f:
             for line in f.readlines():
@@ -188,12 +206,15 @@ class Annotation(QObject):
         for d in self._das:
             d.problem = None
             d.minute = None
-        af = "{}+{}".format(
+        annotations_path = path.normpath(path.join(self._path, ANNOTATIONS_FOLDER))
+        annotations_prefix = '' if os.path.exists(annotations_path) else 'alignment+'
+        af = "{}{}+{}".format(
+            annotations_prefix,
             self._transcript_file,
             self._minutes_file
         )
         self._annotation_file = af
-        full_path = path.join(self._path, ANNOTATIONS_FOLDER, af)
+        full_path = path.join(self._path, ANNOTATIONS_FOLDER, af) if os.path.exists(annotations_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         if path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:

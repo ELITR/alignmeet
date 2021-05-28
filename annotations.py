@@ -176,7 +176,7 @@ class Annotations(QMainWindow):
                 msg.exec_()
 
     def _check_path(self, path):
-        return os.path.exists(os.path.normpath(os.path.join(path, 'transcripts')))
+        return True
 
     @Slot()
     def save(self):
