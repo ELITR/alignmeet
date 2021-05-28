@@ -7,8 +7,8 @@ from PySide2 import QtGui
 
 PROBLEMS = [
         'Organizational',
-        'Speech incomprehensible',
-        'See separate comment',
+        #'Speech incomprehensible',
+        #'See separate comment',
         'Small talk'
     ]
 
@@ -25,7 +25,7 @@ class Problems(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        group = QGroupBox('Problems', self)
+        group = QGroupBox('Other', self)
         group.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addWidget(group)
 

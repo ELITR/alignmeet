@@ -28,7 +28,7 @@ class Evaluation(QWidget):
         slider_layout = QHBoxLayout()
         layout.addLayout(slider_layout)
 
-        slider_layout.addWidget(QLabel('Aadequacy'))
+        slider_layout.addWidget(QLabel('Document-level adequacy'))
         adequacy = QDoubleSpinBox(self)
         adequacy.setMinimum(1)
         adequacy.setMaximum(5)
@@ -36,7 +36,7 @@ class Evaluation(QWidget):
         slider_layout.addWidget(adequacy)
 
 
-        slider_layout.addWidget(QLabel('Relevance'))
+        '''slider_layout.addWidget(QLabel('Relevance'))
         relevance = QDoubleSpinBox(self)
         relevance.setMinimum(1)
         relevance.setMaximum(5)
@@ -71,14 +71,14 @@ class Evaluation(QWidget):
         slider_layout.addWidget(QLabel('Total'))
         total = QLabel('0')
         self.total = total
-        slider_layout.addWidget(total)
+        slider_layout.addWidget(total)'''
 
         self.items = [
             adequacy,
-            relevance,
-            coverage,
-            readability,
-            grammaticality,
+            #relevance,
+            #coverage,
+            #readability,
+            #grammaticality,
         ]
 
         for item in self.items:
@@ -92,13 +92,13 @@ class Evaluation(QWidget):
         self.annotation._evaluation = [
             item.value() for item in self.items
         ]
-        total = 0.2 * self.adequacy.value() \
+        '''total = 0.2 * self.adequacy.value() \
             + 0.2 * self.relevance.value() \
             + 0.2 * self.coverage.value() \
             + 0.2 * self.readability.value() \
             + 0.2 * self.grammaticality.value()
         self.annotation._evaluation.append(total)
-        self.total.setText("{:.2f}".format(total))
+        self.total.setText("{:.2f}".format(total))'''
         self.annotation.modified = True
         self.prevent = False
 

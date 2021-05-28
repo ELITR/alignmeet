@@ -22,6 +22,9 @@ class Minute:
         self._id = id
         self.id = id
         self.text = text
+        self.fluency = 1.0
+        self.grammaticality = 1.0
+        self.adequacy = 1.0
 
     @property
     def id(self):
@@ -231,23 +234,34 @@ class Annotation(QObject):
                         d.minute = None
 
     def open_evaluation(self):
-        self._evaluation = [1.0]*6
-        af = "{}+{}".format(
+        self._evaluation = [1.0]
+        evaluation_path = path.normpath(path.join(self._path, EVALUATIONS_FOLDER))
+        evaluation_prefix = '' if os.path.exists(evaluation_path) else 'evaluation+'
+        af = "{}{}+{}".format(
+            evaluation_prefix,
             self._transcript_file,
             self._minutes_file
         )
-        self._evaluation_file = af
-        full_path = path.join(self._path, EVALUATIONS_FOLDER, af)
+        self._annotation_file = af
+        full_path = path.join(self._path, EVALUATIONS_FOLDER, af) if os.path.exists(evaluation_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         if path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
                 self._evaluation = [
-                    float(line.strip()) for line in f.readlines()
+                    float(line.strip()) for line in lines[:1]
                 ]
+                for m, e in zip(self._minutes, lines[1:]):
+                    e = list(map(float, e.split(SEPARATOR)))
+                    if all(map(lambda x: x > 0, e)):
+                        m.adequacy = e[0]
+                        m.grammaticality = e[1]
+                        m.fluency = e[2]
 
     def _save_transcript(self):
-        full_path = path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file)
-        full_path = path.normpath(full_path)
+        full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file))
+        if not os.path.exists(full_path):
+            full_path = path.normpath(path.join(self._path, self._transcript_file))
         with open(full_path, 'w', encoding='utf-8') as f:
             for da in self._das:
                 try:
@@ -265,19 +279,22 @@ class Annotation(QObject):
                     pass
 
     def _save_minutes(self):
-        full_path = path.join(self._path, MINUTES_FOLDER, self._minutes_file)
-        full_path = path.normpath(full_path)
+        full_path = path.normpath(path.join(self._path, MINUTES_FOLDER, self._minutes_file))
+        if not os.path.exists(full_path):
+            full_path = path.normpath(path.join(self._path, self._minutes_file))
         with open(full_path, 'w', encoding='utf-8') as f:
             for m in self._minutes:
                 f.write('{}\n'.format(m.text))
 
     def _save_annotation(self):
-        af = "{}+{}".format(
+        annotations_path = path.normpath(path.join(self._path, ANNOTATIONS_FOLDER))
+        annotations_prefix = '' if os.path.exists(annotations_path) else 'alignment+'
+        af = "{}{}+{}".format(
+            annotations_prefix,
             self._transcript_file,
             self._minutes_file
         )
-        self._annotation_file = af
-        full_path = path.join(self._path, ANNOTATIONS_FOLDER, af)
+        full_path = path.join(self._path, ANNOTATIONS_FOLDER, af) if os.path.exists(annotations_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
             for idx, da in enumerate(self._das):
@@ -290,16 +307,25 @@ class Annotation(QObject):
                     ))
 
     def _save_evaluation(self):
-        af = "{}+{}".format(
+        evaluation_path = path.normpath(path.join(self._path, EVALUATIONS_FOLDER))
+        evaluation_prefix = '' if os.path.exists(evaluation_path) else 'evaluation+'
+        af = "{}{}+{}".format(
+            evaluation_prefix,
             self._transcript_file,
             self._minutes_file
         )
-        self._evaluation_file = af
-        full_path = path.join(self._path, EVALUATIONS_FOLDER, af)
+        self._annotation_file = af
+        full_path = path.join(self._path, EVALUATIONS_FOLDER, af) if os.path.exists(evaluation_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
             for item in self._evaluation:
                 f.write(f'{item}\n')
+            for m in self._minutes:
+                if any([d.minute == m for d in self._das]):
+                    f.write(f'{m.adequacy}{SEPARATOR}{m.grammaticality}{SEPARATOR}{m.fluency}\n')
+                else:
+                    f.write(f'{-1}{SEPARATOR}{-1}{SEPARATOR}{-1}\n')
+
 
     def save(self):
         self._save_annotation()

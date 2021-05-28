@@ -18,6 +18,7 @@ class Player(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self._gui()
+        self.setVisible(False)
 
     def _gui(self):
         layout = QVBoxLayout()

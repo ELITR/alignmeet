@@ -27,20 +27,39 @@ class MinutesModel(QtCore.QAbstractTableModel):
         return self.annotation.minutes_count() 
 
     def columnCount(self, parent=QtCore.QModelIndex()):
-        return 1
+        return 4
 
     def headerData(self, index, orientation, role):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
                 if index == 0:
                     return 'Minute'
+                if index == 1:
+                    return 'Adequacy'
+                if index == 2:
+                    return 'Grammaticality'
+                if index == 3:
+                    return 'Fluency'
         return super().headerData(index, orientation, role=role)
 
     def setData(self, index, data, role=Qt.EditRole):
         if index.isValid():
             i = index.row()
+            j = index.column()
             if role == Qt.EditRole:
-                self.annotation.get_minute(i).text = data
+                if j == 0:
+                    self.annotation.get_minute(i).text = data
+                else:
+                    if data < 1:
+                        data = 1
+                    if data > 5:
+                        data = 5
+                    if j == 1:
+                        self.annotation.get_minute(i).adequacy = data
+                    if j == 2:
+                        self.annotation.get_minute(i).grammaticality = data
+                    if j == 3:
+                        self.annotation.get_minute(i).fluency = data
                 return True
         return False
         
@@ -64,7 +83,15 @@ class MinutesModel(QtCore.QAbstractTableModel):
         j = index.column()
         m = self.annotation.get_minute(i)
         if role == Qt.DisplayRole or role == Qt.EditRole:
-            return m.text
+            if j == 0:
+                return m.text
+            if any([d.minute == m for d in self.annotation._das]):
+                if j == 1:
+                    return m.adequacy
+                if j == 2:
+                    return m.grammaticality
+                if j == 3:
+                    return m.fluency
         elif role == Qt.BackgroundRole:
             if self.annotation.is_minute_visible(m):
                 return self.annotation.get_minute_color(m)
@@ -75,4 +102,10 @@ class MinutesModel(QtCore.QAbstractTableModel):
             return None
 
     def flags(self, index):
-        return  QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | super().flags(index)
+        i = index.row()
+        j = index.column()
+        m = self.annotation.get_minute(i)
+        if self.annotation.is_minute_visible(m):
+            return  QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | super().flags(index)
+        elif j > 0:
+            return  (super().flags(index)) & ~QtCore.Qt.ItemIsEditable
