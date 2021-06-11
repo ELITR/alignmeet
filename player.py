@@ -18,7 +18,7 @@ class Player(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self._gui()
-        self.setVisible(False)
+        self.file = None
 
     def _gui(self):
         layout = QVBoxLayout()
@@ -208,3 +208,14 @@ class Player(QWidget):
         self.max_time.setText(t.toString("h:m:s"))
 
         self.set_enabled_utils(True)
+        self.setVisible(True)
+
+    def setVisible(self, visible):
+        try:
+            if self.player.get_length() > 0:
+                super().setVisible(visible)
+            else:
+                super().setVisible(False)
+        except:
+            super().setVisible(False)
+

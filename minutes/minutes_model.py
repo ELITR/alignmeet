@@ -17,6 +17,11 @@ class MinutesModel(QtCore.QAbstractTableModel):
         self.annotation.modified_changed.connect(self.update)
         self.setHeaderData(0, QtCore.Qt.Horizontal, "Minute")
         self.annotation.visible_minutes_changed.connect(self.update)
+        self._evaluation_mode = False
+
+    def set_evaluation_mode(self, evaluation):
+        self._evaluation_mode = evaluation
+        self.update() #redraws
 
     @Slot()
     def update(self):
@@ -27,7 +32,7 @@ class MinutesModel(QtCore.QAbstractTableModel):
         return self.annotation.minutes_count() 
 
     def columnCount(self, parent=QtCore.QModelIndex()):
-        return 4
+        return 4 if self._evaluation_mode else 1
 
     def headerData(self, index, orientation, role):
         if role == Qt.DisplayRole:
@@ -104,8 +109,12 @@ class MinutesModel(QtCore.QAbstractTableModel):
     def flags(self, index):
         i = index.row()
         j = index.column()
-        m = self.annotation.get_minute(i)
-        if self.annotation.is_minute_visible(m):
+        if self._evaluation_mode:
+            m = self.annotation.get_minute(i)
+            if self.annotation.is_minute_visible(m) and j > 0:
+                return  QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | super().flags(index)
+            else:
+                return  Qt.NoItemFlags
+        else:
             return  QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable | super().flags(index)
-        elif j > 0:
-            return  (super().flags(index)) & ~QtCore.Qt.ItemIsEditable
+            

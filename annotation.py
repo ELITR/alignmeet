@@ -83,7 +83,7 @@ class Annotation(QObject):
 
         self._das = []
         self._minutes = []
-        self._evaluation = [1.0]*6
+        self._document_level_adequacy = 1.0 #document-level adequacy
 
     def get_path(self):
         return self._path
@@ -135,7 +135,10 @@ class Annotation(QObject):
         self.modified = True
     
     def set_path(self, p):
-        self._prevent()
+        try:
+            self._prevent()
+        except:
+            return
         self._path = p
         self._refresh_files()
         self.path_changed.emit()
@@ -234,7 +237,7 @@ class Annotation(QObject):
                         d.minute = None
 
     def open_evaluation(self):
-        self._evaluation = [1.0]
+        self._document_level_adequacy = 1.0
         evaluation_path = path.normpath(path.join(self._path, EVALUATIONS_FOLDER))
         evaluation_prefix = '' if os.path.exists(evaluation_path) else 'evaluation+'
         af = "{}{}+{}".format(
@@ -248,9 +251,7 @@ class Annotation(QObject):
         if path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
-                self._evaluation = [
-                    float(line.strip()) for line in lines[:1]
-                ]
+                self._document_level_adequacy = float(lines[0].strip())
                 for m, e in zip(self._minutes, lines[1:]):
                     e = list(map(float, e.split(SEPARATOR)))
                     if all(map(lambda x: x > 0, e)):
@@ -318,8 +319,7 @@ class Annotation(QObject):
         full_path = path.join(self._path, EVALUATIONS_FOLDER, af) if os.path.exists(evaluation_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
-            for item in self._evaluation:
-                f.write(f'{item}\n')
+            f.write(f'{self._document_level_adequacy}\n')
             for m in self._minutes:
                 if any([d.minute == m for d in self._das]):
                     f.write(f'{m.adequacy}{SEPARATOR}{m.grammaticality}{SEPARATOR}{m.fluency}\n')

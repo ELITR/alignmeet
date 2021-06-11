@@ -1,13 +1,7 @@
-import os
-import io
-from itertools import takewhile
-
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction, QPlainTextEdit
-from PySide2.QtCore import QItemSelectionModel, Slot
-from PySide2.QtGui import QKeySequence, QTextBlockFormat, QTextCursor
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction
+from PySide2.QtCore import Slot
 from PySide2 import QtWidgets
-from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal
-from PySide2 import QtGui
+from PySide2.QtCore import Qt, Signal
 
 from minutes.minutes_model import MinutesModel
 from annotation import Annotation, Minute
@@ -18,10 +12,15 @@ from combobox import ComboBox
 class Minutes(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):
         super(Minutes, self).__init__(*args, **kwargs)
+        self._evaluation_mode = False
         self.annotation = annotation
         self.annotation.path_changed.connect(self.set_path)
         self.annotation.modified_changed.connect(self._modified)
         self._gui_setup()
+
+    def set_evaluation_mode(self, evaluation):
+        self._evaluation_mode = evaluation
+        self.model.set_evaluation_mode(evaluation)
 
     def set_path(self):
         self.minutes_ver.clear()
@@ -126,6 +125,8 @@ class Minutes(QWidget):
 
     @Slot()
     def _insert_triggered(self):
+        if self._evaluation_mode:
+            return
         r = self.selected_rows()
         nr = Minute()
         if len(r) > 0:
@@ -139,20 +140,24 @@ class Minutes(QWidget):
 
     @Slot()
     def _delete_triggered(self):
+        if self._evaluation_mode:
+            return
         r = self.selected_rows()
         self.model.removeRows(r[0], len(r))
 
     def _editation(self, s):
-        self.insert.setEnabled(s)
-        self.delete.setEnabled(s)
-        self.left.setEnabled(s)
-        self.right.setEnabled(s)
+        self.insert.setEnabled(s and not self._evaluation_mode)
+        self.delete.setEnabled(s and not self._evaluation_mode)
+        self.left.setEnabled(s and not self._evaluation_mode)
+        self.right.setEnabled(s and not self._evaluation_mode)
         if s:
             self.minutes_view.setEditTriggers(QAbstractItemView.AllEditTriggers)
         else:
             self.minutes_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def _minute_selected(self, m):
+        if self._evaluation_mode:
+            return
         if self.edit.isChecked():
             self.delete.setEnabled(True)
             return

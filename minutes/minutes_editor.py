@@ -1,7 +1,4 @@
-from copy import copy
-
-from PySide2 import QtCore, QtGui, QtWidgets
-from PySide2.QtCore import Signal
+from PySide2 import QtCore, QtWidgets
 
 class MinutesEditor(QtWidgets.QStyledItemDelegate):
     def __init__(self, owner):
@@ -29,7 +26,7 @@ class MinutesEditor(QtWidgets.QStyledItemDelegate):
         value = editor.toPlainText()
         self.editor = None
         model.setData(index, value, QtCore.Qt.EditRole)
-        self.end_editing.emit()
+        #self.end_editing.emit()
 
     def updateEditorGeometry(self, editor, option, index):
         editor.setGeometry(option.rect)

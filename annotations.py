@@ -82,6 +82,14 @@ class Annotations(QMainWindow):
         a = file_menu.addAction('&Open existing')
         a.setShortcut('Ctrl+o')
         a.triggered.connect(self.open_existing)
+
+        file_menu.addSeparator()
+
+        a = file_menu.addAction('Evaluation mode')
+        a.setCheckable(True)
+        a.setShortcut('Ctrl+e')
+        a.triggered.connect(self.set_evaluation_mode)
+
         file_menu.addSeparator()
 
         a = file_menu.addAction('&Save')
@@ -90,7 +98,7 @@ class Annotations(QMainWindow):
         file_menu.addSeparator()
 
         a = file_menu.addAction('S&ettings')
-        a.setShortcut('Ctrl+e')
+        a.setShortcut('Ctrl++')
         a.triggered.connect(lambda : Settings(self).exec_())
         file_menu.addSeparator()
 
@@ -136,6 +144,12 @@ class Annotations(QMainWindow):
     def new(self):
         if not self.annotation.modified or self._discard_dialog():
             self.open_existing(True)
+
+    @Slot()
+    def set_evaluation_mode(self, evaluation):
+        self.minutes.set_evaluation_mode(evaluation)
+        self.player.setVisible(not evaluation)
+        self.evaluation.setVisible(evaluation)
 
     @Slot()
     def open_existing(self, create=False):
