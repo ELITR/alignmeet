@@ -1,4 +1,6 @@
-from PySide2.QtWidgets import QDialog, QFormLayout, QComboBox, QSpinBox, QApplication
+import os
+
+from PySide2.QtWidgets import QDialog, QFormLayout, QComboBox, QLineEdit, QSpinBox, QApplication
 from PySide2.QtCore import Slot, Qt, QSettings
 from PySide2.QtGui import QFontDatabase, QFont, QPalette, QColor
 
@@ -29,6 +31,36 @@ class Settings(QDialog):
         c.setMinimum(5)
         c.valueChanged.connect(self._font_changed)
         f.addRow('Font size', c)
+
+        c = QLineEdit(self)
+        c.setText(self.settings.value('annotator', ""))
+        self.token = c
+        c.textChanged.connect(lambda text: self.settings.setValue('annotator', text))
+        f.addRow('Annotator name', c)
+
+        c = QLineEdit(self)
+        c.setText(self.settings.value('repo_location', os.path.abspath('./repository')))
+        self.token = c
+        c.textChanged.connect(lambda text: self.settings.setValue('repo_location', text))
+        f.addRow('Repo location', c)
+
+        c = QLineEdit(self)
+        c.setText(self.settings.value('repository'))
+        self.token = c
+        c.textChanged.connect(lambda text: self.settings.setValue('repository', text))
+        f.addRow('Repository', c)
+
+        c = QLineEdit(self)
+        c.setText(self.settings.value('user'))
+        self.token = c
+        c.textChanged.connect(lambda text: self.settings.setValue('user', text))
+        f.addRow('Repo user', c)
+
+        c = QLineEdit(self)
+        c.setText(self.settings.value('token'))
+        self.token = c
+        c.textChanged.connect(lambda text: self.settings.setValue('token', text))
+        f.addRow('Repo token', c)
 
     def setup_combo(self, values, name):
         c = QComboBox(self)

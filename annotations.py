@@ -1,7 +1,10 @@
 import os
 import io
 
-from PySide2.QtWidgets import QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QAction, QMenuBar
+import subprocess
+from subprocess import Popen, PIPE
+
+from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog
 from PySide2.QtCore import Slot, Qt, QCoreApplication, QSettings
 from PySide2.QtGui import QKeySequence
 
@@ -22,6 +25,7 @@ class Annotations(QMainWindow):
         self.folder = None
         self._gui_setup()
         self.setAttribute(Qt.WA_DeleteOnClose)
+        self.is_git = False
 
     def _gui_setup(self):
         layout = QHBoxLayout()
@@ -82,6 +86,10 @@ class Annotations(QMainWindow):
         a = file_menu.addAction('&Open existing')
         a.setShortcut('Ctrl+o')
         a.triggered.connect(self.open_existing)
+        
+        a = file_menu.addAction('&Open repository')
+        a.setShortcut('Ctrl+g')
+        a.triggered.connect(self.open_repository)
 
         file_menu.addSeparator()
 
@@ -146,6 +154,72 @@ class Annotations(QMainWindow):
             self.open_existing(True)
 
     @Slot()
+    def open_repository(self):
+        s = QSettings(self)
+        s.setValue('repo_location', s.value('repo_location', os.path.abspath('./repository')))
+        path = os.path.abspath(s.value('repo_location', './repository'))
+        repo = s.value('repository', '')
+        repo_name = repo.split('/')[-1].split('.')[0] if repo.endswith('.git') else ''
+        user = s.value('user', '')
+        token = s.value('token', '')
+        
+        if len(repo) == 0 or len(user) == 0 or len(token) == 0 or len(repo_name) == 0:
+            msg = QMessageBox()
+            msg.setText('Invalid repository settings!\nGo to File->Settings and set Repository, User and Token values')
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Error")
+            msg.exec_()
+            return
+
+        
+        if not os.path.exists(path):
+            os.mkdir(path)
+
+        repo_path = os.path.join(path,repo_name)
+
+        progress = QProgressDialog()
+        progress.setModal(True)
+        progress.setAutoClose(True)
+        progress.setWindowTitle('Opening repository')
+        progress.show()
+        progress.setValue(0)
+        progress.setLabelText('Cloning repo (might take a while)... ')
+        QApplication.processEvents()
+
+        if not os.path.exists(repo_path):
+            repo = repo.replace('https://', '')
+            url = f'https://{user}:{token}@{repo}'
+            process = Popen(["git", "clone", url], cwd=path, stdout=subprocess.PIPE)
+
+            process.communicate()
+            if process.returncode > 0:
+                msg = QMessageBox()
+                msg.setText('Error while cloning repository')
+                msg.setIcon(QMessageBox.Critical)
+                msg.setWindowTitle("Error")
+                msg.exec_()
+                return
+        progress.setValue(50)
+        progress.setLabelText('Updating repo... ')
+        QApplication.processEvents()
+
+        process = Popen(["git", "pull"], cwd=repo_path, stdout=subprocess.PIPE)
+        process.communicate()
+        if process.returncode > 0:
+            msg = QMessageBox()
+            msg.setText('Error while updating repository')
+            msg.setIcon(QMessageBox.Critical)
+            msg.setWindowTitle("Error")
+            msg.exec_()
+            return
+        progress.setValue(100)
+        QApplication.processEvents()
+
+        if self.open_existing(restrict=repo_path):
+            self.is_git = True
+
+
+    @Slot()
     def set_evaluation_mode(self, evaluation):
         self.minutes.set_evaluation_mode(evaluation)
         self.transcripts.set_evaluation_mode(evaluation)
@@ -153,10 +227,19 @@ class Annotations(QMainWindow):
         self.evaluation.setVisible(evaluation)
 
     @Slot()
-    def open_existing(self, create=False):
+    def open_existing(self, create=False, restrict=None):
         if self.annotation.modified and not self._discard_dialog():
             return
         dlg = QFileDialog(self, 'Select directory')
+        if restrict:
+            dlg.setDirectory(restrict)
+            def check(d, restrict):
+                print(d)
+                d = os.path.normpath(d)
+                restrict = os.path.normpath(restrict)
+                if not d.startswith(restrict):
+                    dlg.setDirectory(restrict)
+            dlg.directoryEntered.connect(lambda t: check(t, restrict))
         dlg.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog)
         dlg.setFileMode(dlg.DirectoryOnly)
         if dlg.exec_():
@@ -184,12 +267,16 @@ class Annotations(QMainWindow):
                     if os.path.isfile(os.path.normpath(os.path.join(path, f))):
                         self.player.open_audio(os.path.normpath(os.path.join(path, f)))
                         break
+                self.is_git = False
+                return True
             else:
                 msg = QMessageBox()
                 msg.setText('Invalid directory!')
                 msg.setIcon(QMessageBox.Critical)
                 msg.setWindowTitle("Error")
                 msg.exec_()
+        return False
+
 
     def _check_path(self, path):
         return True
@@ -197,6 +284,37 @@ class Annotations(QMainWindow):
     @Slot()
     def save(self):
         self.annotation.save()
+        if self.is_git:
+            s = QSettings(self)
+            annotator = s.value('annotator', 'annonymous')
+
+            progress = QProgressDialog()
+            progress.setModal(True)
+            progress.setAutoClose(True)
+            progress.setWindowTitle('Saving repository')
+            progress.setLabelText('')
+            progress.show()
+            progress.setValue(0)
+            progress.setLabelText('Adding files... ')
+            QApplication.processEvents()
+
+            process = Popen(["git", "add", "*"], cwd=self.annotation._path, stdout=subprocess.PIPE)
+            process.communicate()
+            progress.setLabelText('Commiting... ')
+            progress.setValue(33)
+            QApplication.processEvents()
+
+            process = Popen(["git", "commit", "-m", annotator], cwd=self.annotation._path, stdout=subprocess.PIPE)
+            process.communicate()
+            progress.setValue(66)
+            progress.setLabelText('Pushing to remote... ')
+            QApplication.processEvents()
+
+            process = Popen(["git", "push", "origin", "main"], cwd=self.annotation._path, stdout=subprocess.PIPE)
+            process.communicate()
+            progress.setValue(100)
+            QApplication.processEvents()
+
 
     @Slot()
     def _open_audio(self):
