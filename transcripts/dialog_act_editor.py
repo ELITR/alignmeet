@@ -42,7 +42,7 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
         self.commitData.emit(editor)
 
     def setEditorData(self, editor, index):
-        value = index.data(QtCore.Qt.DisplayRole)
+        value = index.data(QtCore.Qt.EditRole)
         self.last_val = value
         editor.setText(value)
 
@@ -59,3 +59,46 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
 
     def updateEditorGeometry(self, editor, option, index):
         editor.setGeometry(option.rect)
+
+    def anchorAt(self, html, point):
+        doc = QtGui.QTextDocument()
+        doc.setHtml(html)
+        textLayout = doc.documentLayout()
+        return textLayout.anchorAt(point)
+
+    def paint(self, painter, option, index):
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+
+        if options.widget:
+            style = options.widget.style()
+        else:
+            style = QtWidgets.QApplication.style()
+
+        doc = QtGui.QTextDocument()
+        doc.setHtml(options.text)
+        options.text = ''
+
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
+        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
+
+        textRect = style.subElementRect(QtWidgets.QStyle.SE_ItemViewItemText, options)
+
+        painter.save()
+
+        painter.translate(textRect.topLeft())
+        painter.setClipRect(textRect.translated(-textRect.topLeft()))
+        painter.translate(0, 0.5*(options.rect.height() - doc.size().height()))
+        doc.documentLayout().draw(painter, ctx)
+
+        painter.restore()
+
+    def sizeHint(self, option, index):
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+
+        doc = QtGui.QTextDocument()
+        doc.setHtml(options.text)
+        doc.setTextWidth(options.rect.width())
+
+        return QtCore.QSize(doc.idealWidth(), doc.size().height())

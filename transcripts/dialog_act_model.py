@@ -1,6 +1,3 @@
-import os
-import io
-
 from PySide2 import QtCore
 from PySide2.QtCore import Qt, QModelIndex, Slot
 
@@ -15,6 +12,7 @@ class DAModel(QtCore.QAbstractTableModel):
         self.setHeaderData(0, Qt.Horizontal, "Speaker")
         self.setHeaderData(1, Qt.Horizontal, "Transcript")
         self.setHeaderData(2, Qt.Horizontal, "Problem")
+        self.highlight = None
     
     @Slot()
     def update(self):
@@ -58,7 +56,7 @@ class DAModel(QtCore.QAbstractTableModel):
                 d = self.annotation.get_dialog_act(i)
                 val = None
                 if j == 0:
-                    val = d.spreaker
+                    val = d.speaker
                     d.speaker = data
                 if j == 1:
                     val = d.text
@@ -90,8 +88,13 @@ class DAModel(QtCore.QAbstractTableModel):
         d = self.annotation.get_dialog_act(i)
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if j == 0:
+                if role == Qt.DisplayRole and self.highlight:
+                    return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', d.speaker)
                 return d.speaker
             if j == 1:
+                if role == Qt.DisplayRole and self.highlight:
+                    return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', d.text)
+                        
                 return d.text
             if j == 2:
                 if d.problem is None:

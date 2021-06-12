@@ -1,8 +1,9 @@
 import os
 import io
+import re
 from copy import copy
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction
+from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction
 from PySide2.QtCore import QItemSelectionModel, Slot
 from PySide2.QtGui import QKeySequence
 from PySide2 import QtWidgets
@@ -123,6 +124,97 @@ class Transcripts(QWidget):
         self.setLayout(layout)
         edit.setChecked(False)
 
+
+
+        search_layout = QHBoxLayout()
+        layout.addLayout(search_layout)
+
+        self.matches = []
+        self.current = None
+        search = QLineEdit(self)
+        search.returnPressed.connect(lambda: self.next(True))
+        search.textChanged.connect(self.seach_changed)
+        search.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred)
+        search_layout.addWidget(search)
+        self.search = search
+
+        previous = QPushButton('Previous', self)
+        previous.setShortcut('Ctrl+G')
+        previous.clicked.connect(lambda: self.next(False))
+        search_layout.addWidget(previous)
+
+        next = QPushButton('Next', self)
+        next.setShortcut('Ctrl+F')
+        next.clicked.connect(lambda: self.next(True))
+        search_layout.addWidget(next)
+
+        search_options_layout = QHBoxLayout()
+        layout.addLayout(search_options_layout)
+
+        search_status = QLabel('0 matches', self)
+        self.search_status = search_status
+        search_options_layout.addWidget(search_status)
+
+        search_options_layout.addStretch()
+
+        self.only_matches = QCheckBox('show matches only')
+        self.only_matches.setChecked(False)
+        self.only_matches.stateChanged.connect(lambda: self.seach_changed(search.text()))
+        search_options_layout.addWidget(self.only_matches)
+
+        self.ignore_case = QCheckBox('ignore case')
+        self.ignore_case.setChecked(True)
+        self.ignore_case.stateChanged.connect(lambda: self.seach_changed(search.text()))
+        search_options_layout.addWidget(self.ignore_case)
+        
+    def next(self, next):
+        if len(self.matches) > 0:
+            d = 1 if next else -1
+            if self.current is None:
+                self.current = -1 if next else len(self.matches)
+            self.current = (self.current + d) % len(self.matches)
+            index = self.model.index(self.matches[self.current], 0)
+            self.transcript.clearSelection()
+            self.transcript.scrollTo(index)
+            self.transcript.selectRow(self.matches[self.current])
+            self.search_status.setText(f'Match {self.current + 1}/{len(self.matches)}')
+        else:
+            if not self.search.hasFocus():
+                self.search.setFocus(Qt.ShortcutFocusReason)
+            self.search_status.setText('0 matches')
+
+    def seach_changed(self, text):
+        matches = []
+        flags = re.UNICODE
+        if self.ignore_case.isChecked():
+            flags |= re.IGNORECASE
+        valid = False
+        try:
+            ex = re.compile(text, flags)
+            valid = True
+        except:
+            ex = re.compile('', flags)
+        
+        for i in range(self.annotation.das_count()):
+            d = self.annotation.get_dialog_act(i)
+            if ex.search(d.text) is not None or ex.search(d.speaker) is not None:
+                matches.append(i)
+                self.transcript.setRowHidden(i, False)
+            else:
+                self.transcript.setRowHidden(i, self.only_matches.isChecked())
+        if valid:
+            self.search_status.setText(f'{len(matches)} matches')
+            self.search.setStyleSheet("")
+            
+            self.model.highlight = ex if len(text) > 0 else None
+        else:
+            self.model.highlight = None
+            self.search_status.setText(f'Invalid regular expression')
+            self.search.setStyleSheet("QLineEdit { background-color: red }")
+
+        self.model.update()
+        self.matches = matches
+        self.current = None
 
     def set_evaluation_mode(self, evaluation):
         self._evaluation_mode = evaluation
