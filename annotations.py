@@ -148,6 +148,7 @@ class Annotations(QMainWindow):
     @Slot()
     def set_evaluation_mode(self, evaluation):
         self.minutes.set_evaluation_mode(evaluation)
+        self.transcripts.set_evaluation_mode(evaluation)
         self.player.setVisible(not evaluation)
         self.evaluation.setVisible(evaluation)
 

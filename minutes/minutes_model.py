@@ -52,19 +52,28 @@ class MinutesModel(QtCore.QAbstractTableModel):
             i = index.row()
             j = index.column()
             if role == Qt.EditRole:
+                m = self.annotation.get_minute(i)
+                val = None
                 if j == 0:
-                    self.annotation.get_minute(i).text = data
+                    val = m.text
+                    m.text = data
+
                 else:
                     if data < 1:
                         data = 1
                     if data > 5:
                         data = 5
                     if j == 1:
-                        self.annotation.get_minute(i).adequacy = data
+                        val = m.adequacy
+                        m.adequacy = data
                     if j == 2:
-                        self.annotation.get_minute(i).grammaticality = data
+                        val = m.grammaticality
+                        m.grammaticality = data
                     if j == 3:
-                        self.annotation.get_minute(i).fluency = data
+                        val = m.fluency
+                        m.fluency = data
+                if val != data:
+                    self.annotation.modified = True
                 return True
         return False
         

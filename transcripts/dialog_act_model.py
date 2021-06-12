@@ -56,11 +56,15 @@ class DAModel(QtCore.QAbstractTableModel):
             j = index.column()
             if role == Qt.EditRole and j < 2:
                 d = self.annotation.get_dialog_act(i)
+                val = None
                 if j == 0:
+                    val = d.spreaker
                     d.speaker = data
                 if j == 1:
+                    val = d.text
                     d.text = data
-                self.annotation.modified = True
+                if val != data:
+                    self.annotation.modified = True
                 return True
         return False
         

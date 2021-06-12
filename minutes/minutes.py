@@ -22,6 +22,11 @@ class Minutes(QWidget):
         self._evaluation_mode = evaluation
         self.model.set_evaluation_mode(evaluation)
 
+        if evaluation:
+            self.edit.setChecked(False)
+        self.edit.setEnabled(not evaluation)
+        self._editation(not evaluation)
+
     def set_path(self):
         self.minutes_ver.clear()
         self.minutes_ver.addItems(self.annotation.minutes_files)
@@ -150,7 +155,7 @@ class Minutes(QWidget):
         self.delete.setEnabled(s and not self._evaluation_mode)
         self.left.setEnabled(s and not self._evaluation_mode)
         self.right.setEnabled(s and not self._evaluation_mode)
-        if s:
+        if s or self._evaluation_mode:
             self.minutes_view.setEditTriggers(QAbstractItemView.AllEditTriggers)
         else:
             self.minutes_view.setEditTriggers(QAbstractItemView.NoEditTriggers)

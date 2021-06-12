@@ -18,6 +18,7 @@ from combobox import ComboBox
 class Transcripts(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):
         super(Transcripts, self).__init__(*args, **kwargs)
+        self._evaluation_mode = False
         self.annotation = annotation
         self.annotation.path_changed.connect(self.set_path)
         self._gui_setup()
@@ -122,6 +123,15 @@ class Transcripts(QWidget):
         self.setLayout(layout)
         edit.setChecked(False)
 
+
+    def set_evaluation_mode(self, evaluation):
+        self._evaluation_mode = evaluation
+        self._editation(not evaluation)
+
+        if evaluation:
+            self.edit.setChecked(False)
+        self.edit.setEnabled(not evaluation)
+
     
     def set_path(self):
         self.transcript_ver.clear()
@@ -185,9 +195,9 @@ class Transcripts(QWidget):
         selected_rows = self.selected_rows()
         self.annotation.selected_das = selected_rows
         if self.edit.isChecked():
-            self.reset.setEnabled(len(selected_rows) > 0)
-            self.resetp.setEnabled(len(selected_rows) > 0)
-            self.delete.setEnabled(len(selected_rows) > 0)
+            self.delete.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
+        self.reset.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
+        self.resetp.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
 
     @Slot()
     def _insert_triggered(self):
