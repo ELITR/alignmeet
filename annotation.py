@@ -179,14 +179,17 @@ class Annotation(QObject):
         if not os.path.exists(full_path):
             full_path = path.normpath(path.join(self._path, file))
         data = []
-        with open(full_path, 'r', encoding='utf-8') as f:
-            for line in f.readlines():
-                if line is None or len(line) < 1 or not any(map(lambda x: x.isalpha(), list(line))):
-                    continue
-                line = line[:-1] #remove newline
-                s = line.split(SEPARATOR)
-                data.append(DialogAct(*s))
-            self._das = data
+        try:
+            with open(full_path, 'r', encoding='utf-8') as f:
+                for line in f.readlines():
+                    if line is None or len(line) < 1 or not any(map(lambda x: x.isalpha(), list(line))):
+                        continue
+                    line = line[:-1] #remove newline
+                    s = line.split(SEPARATOR)
+                    data.append(DialogAct(*s))
+        except:
+            pass
+        self._das = data
         self.open_annotation()
         self.open_evaluation()
         self.modified = False
@@ -198,12 +201,15 @@ class Annotation(QObject):
         if not os.path.exists(full_path):
             full_path = path.normpath(path.join(self._path, file))
         data = []
-        with open(full_path, 'r', encoding='utf-8') as f:
-            for line in f.readlines():
-                line = line[:-1] #remove newline
-                data.append(Minute(line))
-            self._minutes = data
-            self._make_minutes_index_map()
+        try:
+            with open(full_path, 'r', encoding='utf-8') as f:
+                for line in f.readlines():
+                    line = line[:-1] #remove newline
+                    data.append(Minute(line))
+        except:
+            pass
+        self._minutes = data
+        self._make_minutes_index_map()
         self.open_annotation()
         self.open_evaluation()
         self.modified = False
