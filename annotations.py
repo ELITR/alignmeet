@@ -156,6 +156,7 @@ class Annotations(QMainWindow):
         if self.annotation.modified and not self._discard_dialog():
             return
         dlg = QFileDialog(self, 'Select directory')
+        dlg.setOptions(QFileDialog.ShowDirsOnly | QFileDialog.DontUseNativeDialog)
         dlg.setFileMode(dlg.DirectoryOnly)
         if dlg.exec_():
             path = dlg.selectedFiles()[0]
