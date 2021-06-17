@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QListWidgetItem, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QWidget
+from PySide2.QtWidgets import QLabel, QHBoxLayout, QWidget
 from PySide2 import QtGui
 from PySide2.QtWidgets import QSizePolicy
 

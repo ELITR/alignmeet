@@ -1,7 +1,6 @@
 import os
 import sys
 import struct
-from sys import argv
 
 if os.name == 'nt':
     import PySide2
@@ -10,8 +9,9 @@ if os.name == 'nt':
     plugin_path = os.path.join(dirname, 'plugins', 'platforms')
     os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = plugin_path
 
-from PySide2.QtCore import Qt, QCoreApplication
-from settings import Settings
+from PySide2.QtCore import QCoreApplication
+from PySide2.QtWidgets import QApplication
+
 
 QCoreApplication.setOrganizationName("UFAL")
 QCoreApplication.setOrganizationDomain("ufal.ms.mff.cuni.cz")
@@ -27,8 +27,8 @@ if os.name == 'nt':
     else:
         os.environ['PYTHON_VLC_MODULE_PATH'] = """program/vlc-3.0.9.2"""
 
-from PySide2.QtWidgets import QApplication
-from annotations import Annotations
+from .annotations import Annotations
+from .settings import Settings
 
 def main():
 

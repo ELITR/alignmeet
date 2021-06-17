@@ -1,8 +1,8 @@
 from PySide2 import QtCore
 from PySide2.QtCore import Qt, QModelIndex, Slot
 
-from problems import PROBLEMS
-from annotation import Annotation
+from ..problems import PROBLEMS
+from ..annotation import Annotation
 
 class DAModel(QtCore.QAbstractTableModel): 
     def __init__(self, annotation : Annotation, parent=None, *args): 

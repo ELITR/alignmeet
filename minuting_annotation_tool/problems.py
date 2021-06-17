@@ -1,9 +1,5 @@
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction, QListWidget, QGroupBox, QListWidgetItem
-from PySide2.QtCore import QItemSelectionModel, Slot
-from PySide2.QtGui import QKeySequence
-from PySide2 import QtWidgets
-from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal
-from PySide2 import QtGui
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QSizePolicy, QListWidget, QGroupBox
+from PySide2.QtCore import Signal
 
 PROBLEMS = [
         'Organizational',

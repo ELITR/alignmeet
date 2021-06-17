@@ -1,13 +1,5 @@
-import os
-import io
-
 from PySide2 import QtCore
-from PySide2.QtCore import Qt, QModelIndex, Signal, Slot
-from PySide2.QtGui import QBrush
-from PySide2.QtWidgets import QMessageBox
-
-from problems import PROBLEMS
-from annotation import Minute
+from PySide2.QtCore import Qt, QModelIndex, Slot
 
 class MinutesModel(QtCore.QAbstractTableModel): 
 

@@ -2,19 +2,18 @@ import os
 import io
 
 import subprocess
-from subprocess import Popen, PIPE
+from subprocess import Popen
 
 from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog
-from PySide2.QtCore import Slot, Qt, QCoreApplication, QSettings
-from PySide2.QtGui import QKeySequence
+from PySide2.QtCore import Slot, Qt, QSettings
 
-from transcripts.transcripts import Transcripts
-from minutes.minutes import Minutes
-from player import Player
-from annotation import Annotation
-from problems import Problems
-from settings import Settings
-from evaluation import Evaluation
+from .transcripts.transcripts import Transcripts
+from .minutes.minutes import Minutes
+from .player import Player
+from .annotation import Annotation
+from .problems import Problems
+from .settings import Settings
+from .evaluation import Evaluation
 
 class Annotations(QMainWindow):
 

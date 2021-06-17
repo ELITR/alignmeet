@@ -3,7 +3,7 @@ import os
 import re
 import glob
 
-from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal, QObject
+from PySide2.QtCore import Signal, QObject
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QMessageBox
 

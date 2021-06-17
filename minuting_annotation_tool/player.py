@@ -1,16 +1,11 @@
-import os
-import io
-import math
 import vlc
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QComboBox, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction, QPlainTextEdit, QFormLayout, QTimeEdit, QDoubleSpinBox, QToolButton
-from PySide2.QtCore import QItemSelectionModel, Slot
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QAction, QFormLayout, QTimeEdit, QDoubleSpinBox, QToolButton
+from PySide2.QtCore import Slot
 from PySide2.QtGui import QKeySequence
-from PySide2 import QtWidgets
-from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal, QTime, QTimer
-from PySide2 import QtGui
+from PySide2.QtCore import Qt, QTime, QTimer
 
-from clickslider import ClickSlider
+from .clickslider import ClickSlider
 
 class Player(QWidget):
     was_playing = False

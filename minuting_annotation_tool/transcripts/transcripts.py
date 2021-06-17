@@ -1,20 +1,15 @@
-import os
-import io
 import re
 from copy import copy
 
-from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QTableView, QCheckBox, QMenu, QAbstractItemView, QSizePolicy, QAction
-from PySide2.QtCore import QItemSelectionModel, Slot
-from PySide2.QtGui import QKeySequence
+from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction
+from PySide2.QtCore import Qt, Slot
 from PySide2 import QtWidgets
-from PySide2.QtCore import Qt, QPoint, QModelIndex, Signal
-from PySide2 import QtGui
-from transcripts.dialog_act_model import DAModel
-from transcripts.speaker_editor import SpeakerEditor
-from transcripts.dialog_act_editor import DialogActEditor
-from transcripts.transcript import Transcript
-from annotation import Annotation, DialogAct
-from combobox import ComboBox
+from ..transcripts.dialog_act_model import DAModel
+from ..transcripts.speaker_editor import SpeakerEditor
+from ..transcripts.dialog_act_editor import DialogActEditor
+from ..transcripts.transcript import Transcript
+from ..annotation import Annotation, DialogAct
+from ..combobox import ComboBox
 
 class Transcripts(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):

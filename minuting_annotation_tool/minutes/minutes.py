@@ -3,11 +3,11 @@ from PySide2.QtCore import Slot
 from PySide2 import QtWidgets
 from PySide2.QtCore import Qt, Signal
 
-from minutes.minutes_model import MinutesModel
-from annotation import Annotation, Minute
-from transcripts.transcript import Transcript
-from minutes.minutes_editor import MinutesEditor
-from combobox import ComboBox
+from .minutes_model import MinutesModel
+from ..annotation import Annotation, Minute
+from ..transcripts.transcript import Transcript
+from .minutes_editor import MinutesEditor
+from ..combobox import ComboBox
 
 class Minutes(QWidget):
     def __init__(self, annotation : Annotation, *args, **kwargs):

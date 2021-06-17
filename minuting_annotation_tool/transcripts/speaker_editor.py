@@ -1,6 +1,6 @@
 from PySide2 import QtCore, QtGui, QtWidgets
 
-from annotation import DialogAct
+from ..annotation import DialogAct
 
 class SpeakerEditor(QtWidgets.QStyledItemDelegate):
 
