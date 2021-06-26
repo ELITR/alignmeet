@@ -1,3 +1,4 @@
+import time
 import vlc
 
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QAction, QFormLayout, QTimeEdit, QDoubleSpinBox, QToolButton
@@ -163,17 +164,17 @@ class Player(QWidget):
 
     @Slot()
     def play(self):
-        if self.player is not None:
-            if self.player.is_playing():
-                self.player.pause()
-                self.play_button.setText("Play")
-            elif not self.player.will_play():
-                self.open_audio(self.file)
-                self.player.play()
-                self.play_button.setText("Stop")
-            else:
-                self.player.play()
-                self.play_button.setText("Stop")
+        if self.player is None:
+            self.player = self.media.player_new_from_media()
+
+        if self.player.is_playing():
+            self.player.pause()
+            self.play_button.setText("Play")
+        else:
+            if not self.player.will_play():
+                self.player = self.media.player_new_from_media()
+            self.play_button.setText("Stop")
+            self.player.play()
 
     @Slot()
     def forward(self):
@@ -185,32 +186,48 @@ class Player(QWidget):
         if self.player is not None:
             self.player.set_time(self.player.get_time() + 2000)
 
-    def set_enabled_utils(self, val):
+    def set_enabled_utils(self, val = True):
+        val = val if self.is_valid() else False
         for u in self.playback_actions:
             u.setEnabled(val)
         for u in self.utils:
             u.setEnabled(val)
 
     def open_audio(self, file):
+        self.media = None
+        self.player = None
+        if file is None:
+            self.setVisible(False)
+            return
         self.file = file
-        self.player = vlc.MediaPlayer(file)
+        media = vlc.Media(file)
+        media.parse_with_options(parse_flag=vlc.MediaParseFlag.local,timeout=100000)
         
         self.slider.setMaximum(100)
         self.slider.setValue(0)
 
-        t = QTime.fromMSecsSinceStartOfDay(self.player.get_length())
+        t = QTime.fromMSecsSinceStartOfDay(media.get_duration())
         self.time.setMaximumTime(t)
         self.max_time.setText(t.toString("h:m:s"))
 
-        self.set_enabled_utils(True)
-        self.setVisible(True)
+        self.media = media
+        self.player = media.player_new_from_media()
+        
+        self.set_enabled_utils()
+        self.setVisible()
 
-    def setVisible(self, visible):
+        return self.is_valid()
+
+
+    def is_valid(self):
         try:
-            if self.player.get_length() > 0:
-                super().setVisible(visible)
-            else:
-                super().setVisible(False)
+            return self.media is not None
         except:
+            return False
+
+    def setVisible(self, visible = True):
+        if self.is_valid():
+            super().setVisible(visible)
+        else:
             super().setVisible(False)
 

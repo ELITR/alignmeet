@@ -1,4 +1,5 @@
 from copy import copy
+from typing import KeysView
 
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtCore import Signal
@@ -28,13 +29,17 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
 
     def eventFilter(self, source, event):
         if event.type() == QtCore.QEvent.KeyPress:
-            if event.key() == QtCore.Qt.Key_Return and event.modifiers() & QtCore.Qt.ControlModifier == QtCore.Qt.ControlModifier:
-                if self.editor is not None:
-                    pos = self.editor.cursorPosition()
-                    self.textToSplit = pos
-            if event.key() == QtCore.Qt.Key_Escape:
+            if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
+                if event.modifiers() & QtCore.Qt.ControlModifier == QtCore.Qt.ControlModifier:
+                    if self.editor is not None:
+                        pos = self.editor.textCursor().position()
+                        self.textToSplit = pos
+                self.editor.clearFocus()
+                return True
+            elif event.key() == QtCore.Qt.Key_Escape:
                 if self.editor.toPlainText() == '' and self.last_val == '':
                     self.remove_row.emit()
+                self.editor.clearFocus()
         return super().eventFilter(source, event)
 
     def commit_editor(self):
@@ -76,7 +81,11 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
             style = QtWidgets.QApplication.style()
 
         doc = QtGui.QTextDocument()
+        option = QtGui.QTextOption(doc.defaultTextOption())
+        option.setWrapMode(QtGui.QTextOption.WordWrap)
+        doc.setDefaultTextOption(option)
         doc.setHtml(options.text)
+        doc.setTextWidth(options.rect.width())
         options.text = ''
 
         style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)

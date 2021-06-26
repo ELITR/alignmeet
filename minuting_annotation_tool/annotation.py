@@ -135,10 +135,7 @@ class Annotation(QObject):
         self.modified = True
     
     def set_path(self, p):
-        try:
-            self._prevent()
-        except:
-            return
+        self.modified = False
         self._path = p
         self._refresh_files()
         self.path_changed.emit()

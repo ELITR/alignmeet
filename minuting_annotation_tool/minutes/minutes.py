@@ -7,6 +7,7 @@ from .minutes_model import MinutesModel
 from ..annotation import Annotation, Minute
 from ..transcripts.transcript import Transcript
 from .minutes_editor import MinutesEditor
+from ..transcripts.dialog_act_editor import DialogActEditor
 from ..combobox import ComboBox
 
 class Minutes(QWidget):
@@ -36,7 +37,7 @@ class Minutes(QWidget):
 
         # current transcript
         label = QLabel(self)
-        label.setText('Minutes:')
+        label.setText('Summaries:')
         label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         minutes_ver = ComboBox(self)
@@ -47,7 +48,7 @@ class Minutes(QWidget):
         minutes_ver.focused.connect(self.update_minutes)
 
         edit = QCheckBox(self)
-        edit.setText("edit minutes")
+        edit.setText("edit summarization")
         edit.setChecked(True)
         self.edit = edit
 
@@ -59,7 +60,7 @@ class Minutes(QWidget):
 
         minutes_view = TableView(self)
         minutes_view.setContextMenuPolicy(Qt.ActionsContextMenu)
-        minutes_view.setItemDelegateForColumn(0, MinutesEditor(self))
+        minutes_view.setItemDelegateForColumn(0, DialogActEditor(self))
         self.minutes_view = minutes_view
         self.model = MinutesModel(self.annotation)
         minutes_view.setModel(self.model)

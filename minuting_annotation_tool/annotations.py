@@ -1,5 +1,6 @@
 import os
 import io
+import glob
 
 import subprocess
 from subprocess import Popen
@@ -142,6 +143,7 @@ class Annotations(QMainWindow):
                 self.save()
                 return True
             elif QMessageBox.Discard == msg.result():
+                self.annotation.modified = False
                 return True
             else:
                 return False
@@ -149,8 +151,7 @@ class Annotations(QMainWindow):
 
     @Slot()
     def new(self):
-        if not self.annotation.modified or self._discard_dialog():
-            self.open_existing(True)
+        self.open_existing(True)
 
     @Slot()
     def open_repository(self):
@@ -262,10 +263,13 @@ class Annotations(QMainWindow):
                 self.problems.setEnabled(True)
                 self.evaluation.setEnabled(True)
                 self.evaluation.open_evaluation(self.annotation)
-                for f in os.listdir(path):
-                    if os.path.isfile(os.path.normpath(os.path.join(path, f))):
-                        self.player.open_audio(os.path.normpath(os.path.join(path, f)))
-                        break
+                exts = ['wav', 'mp3', 'flac', 'mp4']
+                self.player.open_audio(None)
+                for e in exts:
+                    for f in glob.glob(os.path.normpath(os.path.join(path, '*.' + e))):
+                        if os.path.isfile(os.path.normpath(os.path.join(path, f))):
+                            if self.player.open_audio(os.path.normpath(os.path.join(path, f))):
+                                break
                 self.is_git = False
                 return True
             else:

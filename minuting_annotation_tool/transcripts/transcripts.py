@@ -298,8 +298,8 @@ class Transcripts(QWidget):
             r = self.annotation.das_count()
         self.model.insertRow(r, nr)
 
-        self.transcript.selectRow(r)
-        #self.transcript.setCurrentIndex(self.model.index(r, 1))
+        self.transcript.clearSelection()
+        self.transcript.setCurrentIndex(self.model.index(r, 1))
         #self.transcript.edit(self.model.index(r,1))
 
     @Slot()
@@ -312,7 +312,7 @@ class Transcripts(QWidget):
 
     @Slot()
     def _delete_triggered(self):
-        r = list(set([x.row() for x in self.transcript.selectionModel()]))
+        r = list(set([x.row() for x in self.transcript.selectionModel().selectedRows()]))
         self.model.removeRows(r[0], len(r))
         
     @Slot()

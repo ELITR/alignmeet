@@ -1,3 +1,5 @@
+import html
+
 from PySide2 import QtCore
 from PySide2.QtCore import Qt, QModelIndex, Slot
 
@@ -82,20 +84,21 @@ class DAModel(QtCore.QAbstractTableModel):
         self.endRemoveRows()
         return True
 
+    def _highlight(self, text, role):
+        text = html.escape(text)
+        if self.highlight and role == Qt.DisplayRole:
+            return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', text)
+        return text
+
     def data(self, index, role=Qt.DisplayRole):
         i = index.row()
         j = index.column()
         d = self.annotation.get_dialog_act(i)
         if role == Qt.DisplayRole or role == Qt.EditRole:
             if j == 0:
-                if role == Qt.DisplayRole and self.highlight:
-                    return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', d.speaker)
-                return d.speaker
+                return self._highlight(d.speaker, role)
             if j == 1:
-                if role == Qt.DisplayRole and self.highlight:
-                    return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', d.text)
-                        
-                return d.text
+                return self._highlight(d.text, role)
             if j == 2:
                 if d.problem is None:
                     return ""
