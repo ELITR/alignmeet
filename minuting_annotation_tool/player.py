@@ -1,5 +1,11 @@
 import time
-import vlc
+
+try:
+    import vlc
+    has_vlc = True
+except:
+    has_vlc = False
+
 
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QSizePolicy, QAction, QFormLayout, QTimeEdit, QDoubleSpinBox, QToolButton
 from PySide2.QtCore import Slot
@@ -194,6 +200,8 @@ class Player(QWidget):
             u.setEnabled(val)
 
     def open_audio(self, file):
+        if not has_vlc:
+            return False
         self.media = None
         self.player = None
         if file is None:
@@ -221,7 +229,7 @@ class Player(QWidget):
 
     def is_valid(self):
         try:
-            return self.media is not None
+            return has_vlc and self.media is not None
         except:
             return False
 
