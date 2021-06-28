@@ -40,10 +40,10 @@ class DAModel(QtCore.QAbstractTableModel):
                 if self.annotation.das_count() > index:
                     d = self.annotation.get_dialog_act(index)
                     if d.time_valid():
-                        return '{:02d}:{:02d} - {:02d}:{:02d}'.format(
-                            d.start // 60,
+                        return '{:2d}:{:2.1f} - {:2d}:{:2.1f}'.format(
+                            int(d.start // 60),
                             d.start - (d.start // 60) * 60,
-                            d.end // 60,
+                            int(d.end // 60),
                             d.end - (d.end // 60) * 60,
                         )
                 return "{}".format(index + 1)

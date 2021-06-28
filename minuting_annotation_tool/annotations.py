@@ -116,7 +116,6 @@ class Annotations(QMainWindow):
 
         playback_menu = menu.addMenu('&Playback')
         a = playback_menu.addAction('&Open audio')
-        a.setShortcut('Ctrl+p')
         a.triggered.connect(self._open_audio)
         playback_menu.addSeparator()
         playback_menu.addActions(player.playback_actions)

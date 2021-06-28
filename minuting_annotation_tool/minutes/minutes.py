@@ -1,5 +1,5 @@
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction
-from PySide2.QtCore import Slot
+from PySide2.QtCore import QSettings, Slot
 from PySide2 import QtWidgets
 from PySide2.QtCore import Qt, Signal
 
@@ -17,6 +17,7 @@ class Minutes(QWidget):
         self.annotation = annotation
         self.annotation.path_changed.connect(self.set_path)
         self.annotation.modified_changed.connect(self._modified)
+        self.indent = QSettings().value('indent')
         self._gui_setup()
 
     def set_evaluation_mode(self, evaluation):
@@ -71,13 +72,13 @@ class Minutes(QWidget):
         layout.addWidget(minutes_view)
 
         insert = QAction('Insert', minutes_view)
-        insert.setShortcuts(['Shift+I', 'Shift+Insert'])
+        insert.setShortcuts(['alt+I', '+Insert'])
         insert.triggered.connect(self._insert_triggered)
         self.insert = insert
         minutes_view.addAction(insert)
 
         delete = QAction('Delete', minutes_view)
-        delete.setShortcuts(['Shift+D', 'Shift+Del'])
+        delete.setShortcuts(['alt+D', 'alt+Del'])
         delete.triggered.connect(self._delete_triggered)
         self.delete = delete
         minutes_view.addAction(delete)
@@ -87,13 +88,13 @@ class Minutes(QWidget):
         minutes_view.addAction(a)
 
         right = QAction('Indent right', minutes_view)
-        right.setShortcuts(['Shift+R', 'Shift+Del'])
+        right.setShortcuts(['alt+R', 'alt+Del'])
         right.triggered.connect(self._right_triggered)
         self.right = right
         minutes_view.addAction(right)
 
         left = QAction('Indent left', minutes_view)
-        left.setShortcuts(['Shift+L', 'Shift+Del'])
+        left.setShortcuts(['alt+L', 'alt+Del'])
         left.triggered.connect(self._left_triggered)
         self.left = left
         minutes_view.addAction(left)
@@ -117,17 +118,18 @@ class Minutes(QWidget):
         r = self.selected_rows()
         for idx in r:
             m = self.annotation.get_minute(idx)
-            m.text = "\t{}".format(m.text)
+            m.text = f'{self.indent}{m.text}'
         self.annotation.modified = True
+        self.model.update()
 
     @Slot()
     def _left_triggered(self):
         r = self.selected_rows()
         for idx in r:
             m = self.annotation.get_minute(idx)
-            if m.text.startswith('\t'):
-                m.text = m.text[1:]
+            m.text = m.text.replace(self.indent, '', 1)
         self.annotation.modified = True
+        self.model.update()
 
     @Slot()
     def _insert_triggered(self):

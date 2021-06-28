@@ -95,13 +95,13 @@ class Transcripts(QWidget):
         transcript.addAction(a)
 
         reset = QAction('Reset minutes', transcript)
-        reset.setShortcuts(['Ctrl+R'])
+        reset.setShortcuts(['Ctrl+m'])
         reset.triggered.connect(self._reset_triggered)
         self.reset = reset
         transcript.addAction(reset)
 
         resetp = QAction('Reset problems', transcript)
-        resetp.setShortcuts(['Ctrl+R'])
+        resetp.setShortcuts(['Ctrl+p'])
         resetp.triggered.connect(self._resetp_triggered)
         self.resetp = resetp
         transcript.addAction(resetp)

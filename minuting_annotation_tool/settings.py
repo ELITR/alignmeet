@@ -62,6 +62,12 @@ class Settings(QDialog):
         c.textChanged.connect(lambda text: self.settings.setValue('token', text))
         f.addRow('Repo token', c)
 
+        c = QLineEdit(self)
+        c.textChanged.connect(lambda text: self.settings.setValue('indent', text))
+        c.setText(self.settings.value('indent', defaultValue='-'))
+        self.token = c
+        f.addRow('Summary indent', c)
+
     def setup_combo(self, values, name):
         c = QComboBox(self)
         c.addItems(values)

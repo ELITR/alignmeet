@@ -47,8 +47,8 @@ class DialogAct:
         self.text = text
         self.minute = minute
         self.problem = problem
-        self.start = int(start)
-        self.end = int(end)
+        self.start = float(start)
+        self.end = float(end)
 
     def time_valid(self):
         return self.start > -1 and self.end > -1
@@ -176,16 +176,15 @@ class Annotation(QObject):
         if not os.path.exists(full_path):
             full_path = path.normpath(path.join(self._path, file))
         data = []
-        try:
-            with open(full_path, 'r', encoding='utf-8') as f:
-                for line in f.readlines():
-                    if line is None or len(line) < 1 or not any(map(lambda x: x.isalpha(), list(line))):
-                        continue
-                    line = line[:-1] #remove newline
-                    s = line.split(SEPARATOR)
-                    data.append(DialogAct(*s))
-        except:
-            pass
+
+        with open(full_path, 'r', encoding='utf-8') as f:
+            for line in f.readlines():
+                if line is None or len(line) < 1 or not any(map(lambda x: x.isalpha(), list(line))):
+                    continue
+                line = line[:-1] #remove newline
+                s = line.split(SEPARATOR)
+                data.append(DialogAct(*s))
+
         self._das = data
         self.open_annotation()
         self.open_evaluation()
