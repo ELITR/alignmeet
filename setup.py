@@ -8,7 +8,7 @@ with open(os.path.join(HERE, "README.md")) as fid:
 
 setup(
     name="minuting-annotation-tool",
-    version="1.0.1",
+    version="1.0.2",
     description="Cmprehensive Tool for Meeting Alignment,Annotation and Evaluation",
     long_description=README,
     long_description_content_type="text/markdown",
