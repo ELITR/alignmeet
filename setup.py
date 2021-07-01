@@ -7,12 +7,12 @@ with open(os.path.join(HERE, "README.md")) as fid:
     README = fid.read()
 
 setup(
-    name="minuting-annotation-tool",
+    name="alignmeet",
     version="1.0.2",
-    description="Cmprehensive Tool for Meeting Alignment,Annotation and Evaluation",
+    description="A Comprehensive Tool for Meeting Alignment, Annotation and Evaluation",
     long_description=README,
     long_description_content_type="text/markdown",
-    url="https://github.com/ELITR/minuting-annotation-tool.git",
+    url="https://github.com/ELITR/alignmeet",
     author="Peter Polak",
     author_email="polak@ufal.mff.cuni.cz",
     license="TBD",
@@ -21,5 +21,5 @@ setup(
     install_requires=[
         "numpy", "PySide2", "python-vlc"
     ],
-    entry_points={"console_scripts": ["minuting-annotation-tool=minuting_annotation_tool.__main__:main"]},
+    entry_points={"console_scripts": ["alignmeet=alignmeet.__main__:main"]},
 )

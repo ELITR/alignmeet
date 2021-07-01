@@ -1,10 +1,10 @@
-name: Publish minuting-annotation-tool
+name: Publish alignmeet
 
 on: push
 
 jobs:
   build-n-publish:
-    name: Build and publish minuting-annotation-tool
+    name: Build and publish alignmeet
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@master
