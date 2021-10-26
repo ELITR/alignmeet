@@ -179,3 +179,36 @@ We distinguish four types of typical cases when the DA(s) cannot be easily align
 ![Playback](documentation/playback.png)   
 
 If the meetings has a recording you can use playback panel. You can use the panel, main menu `Playback` or keyboard shortcuts (see the actual shortcuts in the main menu).
+
+## Git integration
+
+To distribute and synchronize annotation among annotators, you can use Git integration. ALIGNMEET can pull and push changes to a given Git repository.
+
+After the setup, user/annotator just clicks File -> Open repository (`Ctrl + G`). The tool pulls the recent version of the repository and opens a dialog window to select a meeting (the repository might contain more meetings). 
+
+To commit the changes, go File -> Save (`Ctrl + S`). The tool saves the changes to the local copy and pushes them as a new commit to the remote repository. The `Annotator name` in Settings is used as a commit message.
+
+### Setup
+
+Install Git client on the annotator's computer and include it in the `PATH` variable.
+
+You can use any remote Git repository. The repository might contain one or more meetings. If you have more meetings, create a folder per meeting. 
+
+Each annotator must fill these settings:
+
+![Git settings](documentation/git_settings.png)  
+
+| Setting        | Description                                    |
+|----------------|------------------------------------------------|
+| Annotator name | will be used as commit message                 |
+| Repo location  | the location of the local copy                 |
+| Repository     | link to Git repository                         |
+| Repo user      | Git user with R/W access to the repository     |
+| Repo token     | Personal access token for the user (see below) |
+
+#### Personal access token
+
+The Git user that will have R/W access to the repository must create a Personal access token.
+
+In Github go to Settings -> Developer settings -> Personal access tokens -> New personal access token.
+Set a note and set an expiration date. Copy the token and distribute it to the annotators. You might want to create a separate token per annotator, so you can revoke individual annotator access. You might also want to create a separate Git user for security reasons.
