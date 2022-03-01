@@ -3,9 +3,10 @@ from PySide2.QtCore import Signal
 
 PROBLEMS = [
         'Organizational',
-        #'Speech incomprehensible',
-        #'See separate comment',
-        'Small talk'
+        'Speech incomprehensible',
+        'See separate comment',
+        'Small talk',
+        'Censored'
     ]
 
 class Problems(QWidget):

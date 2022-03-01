@@ -300,6 +300,11 @@ class Annotations(QMainWindow):
             progress.setLabelText('Adding files... ')
             QApplication.processEvents()
 
+            process = Popen(["git", "pull"], cwd=self.annotation._path, stdout=subprocess.PIPE)
+            process.communicate()
+            progress.setValue(100)
+            QApplication.processEvents()
+
             process = Popen(["git", "add", "*"], cwd=self.annotation._path, stdout=subprocess.PIPE)
             process.communicate()
             progress.setLabelText('Commiting... ')

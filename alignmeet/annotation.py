@@ -268,16 +268,19 @@ class Annotation(QObject):
         with open(full_path, 'w', encoding='utf-8') as f:
             for da in self._das:
                 try:
-                    f.write("".join([
-                        da.text,
-                        SEPARATOR,
-                        da.speaker,
-                        SEPARATOR,
-                        str(da.start),
-                        SEPARATOR,
-                        str(da.end),
-                        '\n'
-                    ]))
+                    if da.speaker == '':
+                        f.write("".join([
+                            da.text,
+                            '\n'
+                        ]))
+                    else:
+                        f.write("".join([
+                            '(',
+                            da.speaker,
+                            ')',
+                            da.text,
+                            '\n'
+                        ]))
                 except:
                     pass
 
