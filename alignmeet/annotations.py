@@ -317,7 +317,7 @@ class Annotations(QMainWindow):
             progress.setLabelText('Pushing to remote... ')
             QApplication.processEvents()
 
-            process = Popen(["git", "push", "origin", "main"], cwd=self.annotation._path, stdout=subprocess.PIPE)
+            process = Popen(["git", "push"], cwd=self.annotation._path, stdout=subprocess.PIPE)
             process.communicate()
             progress.setValue(100)
             QApplication.processEvents()

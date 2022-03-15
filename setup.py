@@ -8,7 +8,7 @@ with open(os.path.join(HERE, "README.md")) as fid:
 
 setup(
     name="alignmeet",
-    version="1.0.4",
+    version="1.0.5",
     description="A Comprehensive Tool for Meeting Alignment, Annotation and Evaluation",
     long_description=README,
     long_description_content_type="text/markdown",
