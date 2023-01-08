@@ -3,3 +3,6 @@ env/
 __pycache__/
 .history-*
 .vscode/
+*.egg-info/
+build/
+meeting025_cs/

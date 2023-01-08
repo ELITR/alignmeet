@@ -22,7 +22,7 @@ class Problems(QWidget):
         layout = QVBoxLayout()
         self.setLayout(layout)
 
-        group = QGroupBox('Other', self)
+        group = QGroupBox('Problems', self)
         group.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addWidget(group)
 
@@ -30,12 +30,13 @@ class Problems(QWidget):
         group.setLayout(layout)
 
         problems = List(self)
+        for i in PROBLEMS:
+            problems.addItem(i)
         problems.problem_selected.connect(self.problem_selected)
         problems.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addWidget(problems, 0)
         
-        for i in PROBLEMS:
-            problems.addItem(i)
+
 
         problems.clearSelection()
         layout.setSizeConstraint(QVBoxLayout.SetMinimumSize)

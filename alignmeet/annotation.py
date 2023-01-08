@@ -5,7 +5,7 @@ import glob
 
 from PySide2.QtCore import Signal, QObject
 from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QMessageBox
+from PySide2.QtWidgets import QMessageBox, QUndoStack, QUndoCommand, QUndoView
 
 SEPARATOR = '^'
 TRANSCRIPT_FOLDER = 'transcripts'
@@ -14,6 +14,7 @@ ANNOTATIONS_FOLDER = 'annotations'
 EVALUATIONS_FOLDER = 'evaluations'
 
 class Minute:
+    # class for data of a single minute line
     max_id = -1
     def __init__(self, text = '', id = -1):
         super().__init__()
@@ -35,6 +36,7 @@ class Minute:
         self._id = value
 
 class DialogAct:
+    # class for data of a single transcript segment
     speakers = set()
     def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None):
         self._speaker = speaker
@@ -62,6 +64,7 @@ class DialogAct:
         self._speaker = value
 
 class Annotation(QObject):
+    #class that all widgets link to, stores data for the overall app
     visible_minutes_changed = Signal()
     num_colors_changed = Signal()
     modified_changed = Signal(bool)
@@ -83,7 +86,13 @@ class Annotation(QObject):
 
         self._das = []
         self._minutes = []
-        self._document_level_adequacy = 1.0 #document-level adequacy
+        self._document_level_adequacy = 1.0 #shows up at the bottom, how is it stored in the files?
+
+        self.undo_stack = QUndoStack(self) # stores QUndoCommands (user actions) that can be undone/redone
+        self.undo_view = QUndoView(self.undo_stack)
+
+    def show_edit_history(self):
+        self.undo_view.show()
 
     def get_path(self):
         return self._path
@@ -340,14 +349,19 @@ class Annotation(QObject):
         self.modified = False
 
     def set_minute(self, minute = None):
-        for da in self.selected_das:
-            da.minute = minute
-        self.modified = len(self.selected_das) > 0
+        if len(self.selected_das) > 0:
+            command = AlignCommand(self, self.selected_das, minute, "Align transcript")
+            self.undo_stack.push(command)
+        else:
+            print("no das selected, modified=false")
+            self.modified = False
 
     def set_problem(self, problem = None):
-        for da in self.selected_das:
-            da.problem = problem
-        self.modified = len(self.selected_das) > 0
+        if len(self.selected_das) > 0:
+            command = SetProblemCommand(self, self.selected_das, problem, f"Set problem {problem}")
+            self.undo_stack.push(command)
+        else:
+            self.modified = False
 
     @property
     def visible_minutes(self):
@@ -377,3 +391,43 @@ class Annotation(QObject):
             else:
                 last_speaker = da.speaker
         self.modified = True
+
+class AlignCommand(QUndoCommand):
+    def __init__(self, annotation, transcript_rows : set, minute : Minute, text: str) -> None:
+        super().__init__(text)
+        self.annotation = annotation
+        self.transcript_rows = transcript_rows
+        self.new_minute = minute
+        self.original_minutes = {tr : tr.minute for tr in transcript_rows}
+
+    def redo(self):
+        for row in self.transcript_rows:
+            row.minute = self.new_minute
+        
+        self.annotation.modified = True
+
+    def undo(self):
+        for row in self.transcript_rows:
+            row.minute = self.original_minutes[row]
+
+        self.annotation.modified = True
+
+class SetProblemCommand(QUndoCommand):
+    def __init__(self, annotation, transcript_rows : set, problem : int, text: str) -> None:
+        super().__init__(text)
+        self.annotation = annotation
+        self.transcript_rows = transcript_rows
+        self.new_problem = problem
+        self.original_problems = {tr : tr.problem for tr in transcript_rows}
+
+    def redo(self):
+        for row in self.transcript_rows:
+            row.problem = self.new_problem
+        
+        self.annotation.modified = True
+
+    def undo(self):
+        for row in self.transcript_rows:
+            row.problem = self.original_problems[row]
+
+        self.annotation.modified = True

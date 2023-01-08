@@ -212,3 +212,7 @@ The Git user that will have R/W access to the repository must create a Personal 
 
 In Github go to Settings -> Developer settings -> Personal access tokens -> New personal access token.
 Set a note and set an expiration date. Copy the token and distribute it to the annotators. You might want to create a separate token per annotator, so you can revoke individual annotator access. You might also want to create a separate Git user for security reasons.
+
+# Attribution
+
+Some icons by [Yusuke Kamiyamane](http://p.yusukekamiyamane.com/). Licensed under a [Creative Commons Attribution 3.0 License](http://creativecommons.org/licenses/by/3.0/).

@@ -5,8 +5,9 @@ import glob
 import subprocess
 from subprocess import Popen
 
-from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog
+from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog, QAction, QToolBar
 from PySide2.QtCore import Slot, Qt, QSettings
+from PySide2.QtGui import QIcon
 
 from .transcripts.transcripts import Transcripts
 from .minutes.minutes import Minutes
@@ -17,6 +18,10 @@ from .settings import Settings
 from .evaluation import Evaluation
 
 class Annotations(QMainWindow):
+    # main app window class 
+    # creates menus and widgets, puts them in layout
+    # has slots for opening folder/repo, saving
+    # shows discard dialog box
 
     def __init__(self, *args, **kwargs):
         super(Annotations, self).__init__(*args, **kwargs)
@@ -76,50 +81,62 @@ class Annotations(QMainWindow):
         widget.setLayout(layout)
         self.setCentralWidget(widget)
 
+        # create all menu and toolbar actions
+        self.newAction              = self._createAction('&New', 'Ctrl+n', self.new)
+        self.openMeetingAction      = self._createAction('&Open meeting', 'Ctrl+o', self.open_existing)
+        self.openRepositoryAction   = self._createAction('&Open repository', 'Ctrl+g', self.open_repository)
+        self.evalModeAction         = self._createAction('Evaluation mode', 'Ctrl+e', self.set_evaluation_mode)
+        self.evalModeAction.setCheckable(True)
+        self.saveAction             = self._createAction('&Save', 'Ctrl+s', self.save)
+        self.settingsAction         = self._createAction('S&ettings', 'Ctrl++', lambda : Settings(self).exec_())
+        self.closeAction            = self._createAction('&Close', 'Alt+c', self.close)
+        self.undoAction             = self._createAction('&Undo', 'Ctrl+z', self.annotation.undo_stack.undo)
+        self.undoAction.setIcon(QIcon("alignmeet/icons/arrow-return-180-left.png"))
+        self.redoAction             = self._createAction('&Redo', 'Ctrl+y', self.annotation.undo_stack.redo)
+        self.redoAction.setIcon(QIcon("alignmeet/icons/arrow-return.png"))
+        self.editHistoryAction      = self._createAction('Show edit &history', 'Alt+h', self.annotation.show_edit_history)
+        self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
+
+        # create menu bar
         menu = self.menuBar()
+
         file_menu = menu.addMenu('&File')
-
-        a = file_menu.addAction('&New')
-        a.setShortcut('Ctrl+n')
-        a.triggered.connect(self.new)
-
-        a = file_menu.addAction('&Open existing')
-        a.setShortcut('Ctrl+o')
-        a.triggered.connect(self.open_existing)
-        
-        a = file_menu.addAction('&Open repository')
-        a.setShortcut('Ctrl+g')
-        a.triggered.connect(self.open_repository)
-
+        file_menu.addAction(self.newAction)
+        file_menu.addAction(self.openMeetingAction)
+        file_menu.addAction(self.openRepositoryAction)
         file_menu.addSeparator()
 
-        a = file_menu.addAction('Evaluation mode')
-        a.setCheckable(True)
-        a.setShortcut('Ctrl+e')
-        a.triggered.connect(self.set_evaluation_mode)
-
+        file_menu.addAction(self.evalModeAction)
         file_menu.addSeparator()
 
-        a = file_menu.addAction('&Save')
-        a.setShortcut('Ctrl+s')
-        a.triggered.connect(self.save)
+        file_menu.addAction(self.saveAction)
         file_menu.addSeparator()
 
-        a = file_menu.addAction('S&ettings')
-        a.setShortcut('Ctrl++')
-        a.triggered.connect(lambda : Settings(self).exec_())
+        file_menu.addAction(self.settingsAction)
         file_menu.addSeparator()
 
-        a = file_menu.addAction('&Close')
-        a.setShortcut('Alt+c')
-        a.triggered.connect(self.close)
+        file_menu.addAction(self.closeAction)
+
+        edit_menu = menu.addMenu('&Edit')
+        edit_menu.addAction(self.undoAction)
+        edit_menu.addAction(self.redoAction)
+        edit_menu.addAction(self.editHistoryAction)
 
         playback_menu = menu.addMenu('&Playback')
-        a = playback_menu.addAction('&Open audio')
-        a.triggered.connect(self._open_audio)
+        playback_menu.addAction(self.openAudioAction)
         playback_menu.addSeparator()
         playback_menu.addActions(player.playback_actions)
 
+        # Add toolbar (with undo redo, edit mode toggle, TODO split and join line)
+        toolbar = QToolBar("Main Toolbar")
+        toolbar.setMovable(False)
+        self.addToolBar(toolbar)
+        toolbar.addAction(self.undoAction)
+        toolbar.addAction(self.redoAction)
+        toolbar.addSeparator()
+        toolbar.addAction(self.evalModeAction)
+
+        # Set up settings for saving layout upon close
         s = QSettings(self)
         self.splitter = splitter
         self.splitter_righ = splitter_right
@@ -130,6 +147,12 @@ class Annotations(QMainWindow):
         
         splitter_right.setStretchFactor(0, 10)
         splitter_right.setStretchFactor(1, 1)
+
+    def _createAction(self, name : str, shortcut : str, connection):
+        a = QAction(name)
+        a.setShortcut(shortcut)
+        a.triggered.connect(connection)
+        return a
 
     def _discard_dialog(self):
         msg = QMessageBox(self)

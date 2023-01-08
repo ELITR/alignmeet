@@ -65,7 +65,7 @@ class Transcripts(QWidget):
         self.model = model
         transcript.setModel(model)
         transcript.setSelectionBehavior(QAbstractItemView.SelectRows)
-        selection_model = transcript.selectionModel()
+        selection_model = transcript.selectionModel() #TODO: add to diagram somehow
         selection_model.selectionChanged.connect(self._selection_changed)
         editor = DialogActEditor(self)
         editor.end_editing.connect(self._editor_closed)
