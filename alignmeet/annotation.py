@@ -26,6 +26,7 @@ class Minute:
         self.fluency = 1.0
         self.grammaticality = 1.0
         self.adequacy = 1.0
+        self.relevance = 1.0
 
     @property
     def id(self):

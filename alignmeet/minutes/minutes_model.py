@@ -66,6 +66,9 @@ class MinutesModel(QtCore.QAbstractTableModel):
                     if j == 3:
                         val = m.fluency
                         m.fluency = data
+                    if j == 4:
+                        val = m.relevance
+                        m.relevance = data
                 if val != data:
                     self.annotation.modified = True
                 return True
@@ -100,6 +103,8 @@ class MinutesModel(QtCore.QAbstractTableModel):
                     return m.grammaticality
                 if j == 3:
                     return m.fluency
+                if j == 4:
+                    return m.relevance
         elif role == Qt.BackgroundRole:
             if self.annotation.is_minute_visible(m):
                 return self.annotation.get_minute_color(m)
