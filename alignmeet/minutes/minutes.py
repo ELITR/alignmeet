@@ -24,10 +24,9 @@ class Minutes(QWidget):
         self._evaluation_mode = evaluation
         self.model.set_evaluation_mode(evaluation)
 
-        if evaluation:
-            self.edit.setChecked(False)
+        self.edit.setChecked(False)
         self.edit.setEnabled(not evaluation)
-        self._editation(not evaluation)
+        self._editation(False)
 
     def set_path(self):
         self.minutes_ver.clear()
@@ -36,7 +35,7 @@ class Minutes(QWidget):
     def _gui_setup(self):
         layout = QVBoxLayout(self)
 
-        # current transcript
+        # current minutes
         label = QLabel(self)
         label.setText('Summaries:')
         label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)

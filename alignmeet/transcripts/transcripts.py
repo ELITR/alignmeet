@@ -213,12 +213,10 @@ class Transcripts(QWidget):
 
     def set_evaluation_mode(self, evaluation):
         self._evaluation_mode = evaluation
-        self._editation(not evaluation)
 
-        if evaluation:
-            self.edit.setChecked(False)
+        self.edit.setChecked(False)
         self.edit.setEnabled(not evaluation)
-
+        self._editation(False)
     
     def set_path(self):
         self.transcript_ver.clear()

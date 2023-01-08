@@ -24,7 +24,7 @@ class MinutesModel(QtCore.QAbstractTableModel):
         return self.annotation.minutes_count() 
 
     def columnCount(self, parent=QtCore.QModelIndex()):
-        return 4 if self._evaluation_mode else 1
+        return 5 if self._evaluation_mode else 1
 
     def headerData(self, index, orientation, role):
         if role == Qt.DisplayRole:
@@ -37,6 +37,8 @@ class MinutesModel(QtCore.QAbstractTableModel):
                     return 'Grammaticality'
                 if index == 3:
                     return 'Fluency'
+                if index == 4:
+                    return 'Relevance'
         return super().headerData(index, orientation, role=role)
 
     def setData(self, index, data, role=Qt.EditRole):
