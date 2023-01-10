@@ -391,4 +391,5 @@ class Annotations(QMainWindow):
                 elif QMessageBox.Cancel == msg.result():
                     event.ignore()
                 return
+        self.annotation.undo_view.close()
         return super().closeEvent(event)
