@@ -1,7 +1,7 @@
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction
-from PySide2.QtCore import QSettings, Slot
+from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
+from PySide2.QtCore import QSettings, Slot, Qt, Signal
 from PySide2 import QtWidgets
-from PySide2.QtCore import Qt, Signal
+from PySide2.QtGui import QIcon
 
 from .minutes_model import MinutesModel
 from ..annotation import Annotation, Minute
@@ -47,15 +47,14 @@ class Minutes(QWidget):
         minutes_ver.currentTextChanged.connect(self._minutes_changed)
         minutes_ver.focused.connect(self.update_minutes)
 
-        edit = QCheckBox(self)
-        edit.setText("edit summarization")
-        edit.setChecked(True)
-        self.edit = edit
+        self.edit = QCheckBox(self)
+        self.edit.setText("edit summarization")
+        self.edit.setChecked(True)
 
         minutes_layout = QHBoxLayout()
         minutes_layout.addWidget(label)
         minutes_layout.addWidget(minutes_ver)
-        minutes_layout.addWidget(edit)
+        # minutes_layout.addWidget(self.edit)
         layout.addLayout(minutes_layout)
 
         minutes_view = TableView(self)
@@ -67,24 +66,35 @@ class Minutes(QWidget):
         header = minutes_view.horizontalHeader()
         header.stretchLastSection()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        edit.stateChanged.connect(self._editation)
+        self.edit.stateChanged.connect(self._editation)
+
+        #create toolbar and add all actions to it
+
+        self.toolbar = QToolBar("Minutes toolbar")
+        self.toolbar.setMovable(False)
+        layout.addWidget(self.toolbar)
+
+        self.insertingAction = QAction('Insert', minutes_view)
+        self.insertingAction.setShortcuts(['alt+I', '+Insert'])
+        self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
+        self.insertingAction.setToolTip('Insert row (Alt+I)')
+        self.insertingAction.triggered.connect(self._insert_triggered)
+        self.toolbar.addAction(self.insertingAction)
+
+        self.deleteAction = QAction('Delete', minutes_view)
+        self.deleteAction.setShortcuts(['alt+D', 'alt+Del'])
+        self.deleteAction.setIcon(QIcon("alignmeet/icons/layout-join-vertical.png"))
+        self.deleteAction.setToolTip("Delete row (Alt+D)")
+        self.deleteAction.triggered.connect(self._delete_triggered)
+        self.toolbar.addAction(self.deleteAction)
+
+        empty = QWidget()
+        empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(empty)
+
+        self.toolbar.addWidget(self.edit)
+
         layout.addWidget(minutes_view)
-
-        insert = QAction('Insert', minutes_view)
-        insert.setShortcuts(['alt+I', '+Insert'])
-        insert.triggered.connect(self._insert_triggered)
-        self.insert = insert
-        minutes_view.addAction(insert)
-
-        delete = QAction('Delete', minutes_view)
-        delete.setShortcuts(['alt+D', 'alt+Del'])
-        delete.triggered.connect(self._delete_triggered)
-        self.delete = delete
-        minutes_view.addAction(delete)
-        
-        a = QAction('', self)
-        a.setSeparator(True)
-        minutes_view.addAction(a)
 
         right = QAction('Indent right', minutes_view)
         right.setShortcuts(['alt+R', 'alt+Del'])
@@ -100,7 +110,7 @@ class Minutes(QWidget):
 
         minutes_view.minute_selected.connect(self._minute_selected)
         self.setLayout(layout)
-        edit.setChecked(False)
+        self.edit.setChecked(False)
 
     @Slot()
     def update_minutes(self):
@@ -140,7 +150,9 @@ class Minutes(QWidget):
             r = r[-1] + 1
         else:
             r = self.annotation.minutes_count()
-        self.model.insertRow(r, nr)
+
+        command = InsertCommand(self, r, nr, "Insert minutes line")
+        self.annotation.push_to_undo_stack(command)
 
         self.minutes_view.selectRow(r)
         #self.minutes_view.setCurrentIndex(self.model.index(r, 1))
@@ -150,11 +162,13 @@ class Minutes(QWidget):
         if self._evaluation_mode:
             return
         r = self.selected_rows()
-        self.model.removeRows(r[0], len(r))
+
+        command = DeleteCommand(self, r[0], "Delete minutes line")
+        self.annotation.push_to_undo_stack(command)
 
     def _editation(self, s):
-        self.insert.setEnabled(s and not self._evaluation_mode)
-        self.delete.setEnabled(s and not self._evaluation_mode)
+        self.insertingAction.setEnabled(s and not self._evaluation_mode)
+        self.deleteAction.setEnabled(s and not self._evaluation_mode)
         self.left.setEnabled(s and not self._evaluation_mode)
         self.right.setEnabled(s and not self._evaluation_mode)
         if s or self._evaluation_mode:
@@ -166,7 +180,7 @@ class Minutes(QWidget):
         if self._evaluation_mode:
             return
         if self.edit.isChecked():
-            self.delete.setEnabled(True)
+            self.deleteAction.setEnabled(True)
             return
         m = self.annotation.get_minute(m)
         self.annotation.set_minute(m)
@@ -181,9 +195,9 @@ class Minutes(QWidget):
     def _selection_changed(self):
         selected_rows = self.selected_rows()
         if len(selected_rows) == 0:
-            self.delete.setEnabled(False)
+            self.deleteAction.setEnabled(False)
         else:
-            self.delete.setEnabled(True)
+            self.deleteAction.setEnabled(True)
 
     def selected_rows(self):
         selection = self.minutes_view.selectionModel()
@@ -208,3 +222,29 @@ class TableView(Transcript):
             self.minute_selected.emit(idx)
             self.clearSelection()
         return super().mouseDoubleClickEvent(event)
+
+class InsertCommand(QUndoCommand):
+    def __init__(self, minutes, row_index, new_minute, text : str):
+        super().__init__(text)
+        self.minutes = minutes
+        self.row_index = row_index
+        self.new_minute = new_minute
+
+    def redo(self):
+        self.minutes.model.insertRow(self.row_index, self.new_minute)
+
+    def undo(self):
+        self.minutes.model.removeRows(self.row_index, 1)
+
+class DeleteCommand(QUndoCommand):
+    def __init__(self, minutes, row_index, text : str):
+        super().__init__(text)
+        self.minutes = minutes
+        self.row_index = row_index
+
+    def redo(self):
+        self.old_line = self.minutes.annotation.get_minute(self.row_index)
+        self.minutes.model.removeRows(self.row_index, 1)
+
+    def undo(self):
+        self.minutes.model.insertRow(self.row_index, self.old_line)
