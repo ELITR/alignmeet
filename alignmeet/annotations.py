@@ -139,8 +139,6 @@ class Annotations(QMainWindow):
         toolbar.addAction(self.undoAction)
         toolbar.addAction(self.redoAction)
         toolbar.addSeparator()
-        toolbar.addAction(self.insertingAction)
-        toolbar.addSeparator()
         toolbar.addAction(self.evalModeAction)
         self.toolbar = toolbar
 

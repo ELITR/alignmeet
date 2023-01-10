@@ -57,16 +57,36 @@ class Transcripts(QWidget):
         self.insertingAction = QAction('Insert row', transcript)
         self.insertingAction.setShortcuts(['Ctrl+I', 'Insert'])
         self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
+        self.insertingAction.setToolTip('Insert row (Ctrl+I)')
         self.insertingAction.triggered.connect(self._insert_triggered)
         self.toolbar.addAction(self.insertingAction)
         
         self.deleteAction = QAction('Delete selected', transcript)
         self.deleteAction.setShortcuts(['Ctrl+D', 'Del'])
         self.deleteAction.setIcon(QIcon("alignmeet/icons/layout-join-vertical.png"))
+        self.deleteAction.setToolTip("Delete selected (Ctrl+D)")
         self.deleteAction.triggered.connect(self._delete_triggered)
         self.toolbar.addAction(self.deleteAction)
 
         self.toolbar.addSeparator()
+
+        self.resetAction = QAction('Reset minutes', transcript)
+        self.resetAction.setShortcuts(['Ctrl+m'])
+        self.resetAction.setToolTip('Reset minutes (Ctrl+m)')
+        self.resetAction.triggered.connect(self._reset_triggered)
+        transcript.addAction(self.resetAction)
+        self.toolbar.addAction(self.resetAction)
+        
+        self.resetpAction = QAction('Reset problems', transcript)
+        self.resetpAction.setShortcuts(['Ctrl+p'])
+        self.resetpAction.setToolTip('Reset problems (Ctrl+p)')
+        self.resetpAction.triggered.connect(self._resetp_triggered)
+        transcript.addAction(self.resetpAction)
+        self.toolbar.addAction(self.resetpAction)
+
+        empty = QWidget()
+        empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.toolbar.addWidget(empty)
 
         self.edit = QCheckBox("edit transcript")
         self.edit.setChecked(True)
@@ -100,17 +120,6 @@ class Transcripts(QWidget):
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
 
-        reset = QAction('Reset minutes', transcript)
-        reset.setShortcuts(['Ctrl+m'])
-        reset.triggered.connect(self._reset_triggered)
-        self.reset = reset
-        transcript.addAction(reset)
-
-        resetp = QAction('Reset problems', transcript)
-        resetp.setShortcuts(['Ctrl+p'])
-        resetp.triggered.connect(self._resetp_triggered)
-        self.resetp = resetp
-        transcript.addAction(resetp)
 
         a = QAction('', self)
         a.setSeparator(True)
@@ -286,8 +295,8 @@ class Transcripts(QWidget):
         self.annotation.selected_das = selected_rows
         if self.edit.isChecked():
             self.deleteAction.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
-        self.reset.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
-        self.resetp.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
+        self.resetAction.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
+        self.resetpAction.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
 
     @Slot()
     def _insert_triggered(self):
