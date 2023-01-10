@@ -3,9 +3,9 @@ import os
 import re
 import glob
 
-from PySide2.QtCore import Signal, QObject
+from PySide2.QtCore import Signal, Slot, QObject
 from PySide2.QtGui import QColor
-from PySide2.QtWidgets import QMessageBox, QUndoStack, QUndoCommand, QUndoView
+from PySide2.QtWidgets import QMessageBox, QUndoStack, QUndoView, QUndoCommand
 
 SEPARATOR = '^'
 TRANSCRIPT_FOLDER = 'transcripts'
@@ -70,6 +70,8 @@ class Annotation(QObject):
     num_colors_changed = Signal()
     modified_changed = Signal(bool)
     path_changed = Signal()
+    undo_toggle = Signal(bool)
+    redo_toggle = Signal(bool)
 
     def __init__(self, parent = None):
         super(Annotation, self).__init__(parent)
@@ -352,7 +354,7 @@ class Annotation(QObject):
     def set_minute(self, minute = None):
         if len(self.selected_das) > 0:
             command = AlignCommand(self, self.selected_das, minute, "Align transcript")
-            self.undo_stack.push(command)
+            self._push_to_undo_stack(command)
         else:
             print("no das selected, modified=false")
             self.modified = False
@@ -360,9 +362,26 @@ class Annotation(QObject):
     def set_problem(self, problem = None):
         if len(self.selected_das) > 0:
             command = SetProblemCommand(self, self.selected_das, problem, f"Set problem {problem}")
-            self.undo_stack.push(command)
+            self._push_to_undo_stack(command)
         else:
             self.modified = False
+
+    def _push_to_undo_stack(self, command : QUndoCommand):
+        self.undo_stack.push(command)
+        self.undo_toggle.emit(self.undo_stack.canUndo())
+        self.redo_toggle.emit(self.undo_stack.canRedo())
+
+    @Slot()
+    def undo(self):
+        self.undo_stack.undo()
+        self.undo_toggle.emit(self.undo_stack.canUndo())
+        self.redo_toggle.emit(self.undo_stack.canRedo())
+
+    @Slot()
+    def redo(self):
+        self.undo_stack.redo()
+        self.undo_toggle.emit(self.undo_stack.canUndo())
+        self.redo_toggle.emit(self.undo_stack.canRedo())
 
     @property
     def visible_minutes(self):
@@ -392,6 +411,7 @@ class Annotation(QObject):
             else:
                 last_speaker = da.speaker
         self.modified = True
+
 
 class AlignCommand(QUndoCommand):
     def __init__(self, annotation, transcript_rows : set, minute : Minute, text: str) -> None:

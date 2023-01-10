@@ -90,10 +90,14 @@ class Annotations(QMainWindow):
         self.saveAction             = self._createAction('&Save', 'Ctrl+s', self.save)
         self.settingsAction         = self._createAction('S&ettings', 'Ctrl++', lambda : Settings(self).exec_())
         self.closeAction            = self._createAction('&Close', 'Alt+c', self.close)
-        self.undoAction             = self._createAction('&Undo', 'Ctrl+z', self.annotation.undo_stack.undo)
+        self.undoAction             = self._createAction('&Undo', 'Ctrl+z', self.annotation.undo)
         self.undoAction.setIcon(QIcon("alignmeet/icons/arrow-return-180-left.png"))
-        self.redoAction             = self._createAction('&Redo', 'Ctrl+y', self.annotation.undo_stack.redo)
+        self.undoAction.setEnabled(False)
+        self.annotation.undo_toggle.connect(self._undo_toggle)
+        self.redoAction             = self._createAction('&Redo', 'Ctrl+y', self.annotation.redo)
         self.redoAction.setIcon(QIcon("alignmeet/icons/arrow-return.png"))
+        self.redoAction.setEnabled(False)
+        self.annotation.redo_toggle.connect(self._redo_toggle)
         self.editHistoryAction      = self._createAction('Show edit &history', 'Alt+h', self.annotation.show_edit_history)
         self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
 
@@ -355,6 +359,14 @@ class Annotations(QMainWindow):
             if len(dlg.selectedFiles()) > 0 and os.path.exists(dlg.selectedFiles()[0]):
                 file = dlg.selectedFiles()[0]
                 self.player.open_audio(file)
+
+    @Slot(bool)
+    def _undo_toggle(self, value):
+        self.undoAction.setEnabled(value)
+
+    @Slot(bool)
+    def _redo_toggle(self, value):
+        self.redoAction.setEnabled(value)
 
     def closeEvent(self, event):
         s = QSettings(self)
