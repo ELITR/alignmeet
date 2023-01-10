@@ -8,12 +8,12 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
     end_editing = Signal()
     remove_row = Signal()
 
-
     def __init__(self, owner):
         super().__init__(owner)
         self.editor = None
         self.textToSplit = None
         self.last_val = None
+        self.owner = owner
 
     def paint(self, painter, option, index):
         if isinstance(self.parent(), QtWidgets.QAbstractItemView):
@@ -54,12 +54,11 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
     def setModelData(self, editor, model, index):
         value = editor.toPlainText()
         self.editor = None
-        model.setData(index, value[:self.textToSplit], QtCore.Qt.EditRole)
-        if self.textToSplit is not None:
-            row = copy(model.annotation.get_dialog_act(index.row()))
-            row.text = value[self.textToSplit:]
-            model.insertRow(index.row() + 1, row)
+        if (not model.data(index) == value or not self.textToSplit == None): #if changed
+            command = EditTextCommand(value, self.textToSplit, model, index)
             self.textToSplit = None
+            self.owner.annotation.push_to_undo_stack(command)
+        
         self.end_editing.emit()
 
     def updateEditorGeometry(self, editor, option, index):
@@ -111,3 +110,24 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
         doc.setTextWidth(options.rect.width())
 
         return QtCore.QSize(doc.idealWidth(), doc.size().height())
+
+class EditTextCommand(QtWidgets.QUndoCommand):
+    def __init__(self, value, textToSplit, model, index):
+        super().__init__("Text edit") #TODO: put beginning of text
+        self.value = value
+        self.textToSplit = textToSplit
+        self.model = model
+        self.index = index
+    
+    def redo(self):
+        self.old_data = self.model.data(self.index)
+        self.model.setData(self.index, self.value[:self.textToSplit], QtCore.Qt.EditRole)
+        if self.textToSplit is not None:
+            row = copy(self.model.annotation.get_dialog_act(self.index.row()))
+            row.text = self.value[self.textToSplit:]
+            self.model.insertRow(self.index.row() + 1, row)
+
+    def undo(self):
+        self.model.setData(self.index, self.old_data, QtCore.Qt.EditRole)
+        if self.textToSplit is not None:
+            self.model.removeRows(self.index.row()+1, 1)

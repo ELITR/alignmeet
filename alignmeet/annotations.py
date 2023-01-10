@@ -101,6 +101,7 @@ class Annotations(QMainWindow):
         self.editHistoryAction      = self._createAction('Show edit &history', 'Alt+h', self.annotation.show_edit_history)
         self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
 
+
         # create menu bar
         menu = self.menuBar()
 
@@ -138,7 +139,10 @@ class Annotations(QMainWindow):
         toolbar.addAction(self.undoAction)
         toolbar.addAction(self.redoAction)
         toolbar.addSeparator()
+        toolbar.addAction(self.insertingAction)
+        toolbar.addSeparator()
         toolbar.addAction(self.evalModeAction)
+        self.toolbar = toolbar
 
         # Set up settings for saving layout upon close
         s = QSettings(self)

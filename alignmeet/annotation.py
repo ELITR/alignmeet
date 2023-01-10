@@ -354,7 +354,7 @@ class Annotation(QObject):
     def set_minute(self, minute = None):
         if len(self.selected_das) > 0:
             command = AlignCommand(self, self.selected_das, minute, "Align transcript")
-            self._push_to_undo_stack(command)
+            self.push_to_undo_stack(command)
         else:
             print("no das selected, modified=false")
             self.modified = False
@@ -362,11 +362,11 @@ class Annotation(QObject):
     def set_problem(self, problem = None):
         if len(self.selected_das) > 0:
             command = SetProblemCommand(self, self.selected_das, problem, f"Set problem {problem}")
-            self._push_to_undo_stack(command)
+            self.push_to_undo_stack(command)
         else:
             self.modified = False
 
-    def _push_to_undo_stack(self, command : QUndoCommand):
+    def push_to_undo_stack(self, command : QUndoCommand):
         self.undo_stack.push(command)
         self.undo_toggle.emit(self.undo_stack.canUndo())
         self.redo_toggle.emit(self.undo_stack.canRedo())

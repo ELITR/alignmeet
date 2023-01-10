@@ -1,8 +1,9 @@
 import re
 from copy import copy
 
-from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction
-from PySide2.QtCore import Qt, Slot
+from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
+from PySide2.QtCore import Qt, Slot, Signal
+from PySide2.QtGui import QIcon
 from PySide2 import QtWidgets
 from ..transcripts.dialog_act_model import DAModel
 from ..transcripts.speaker_editor import SpeakerEditor
@@ -12,6 +13,8 @@ from ..annotation import Annotation, DialogAct
 from ..combobox import ComboBox
 
 class Transcripts(QWidget):
+    edit_mode_changed = Signal(bool)
+
     def __init__(self, annotation : Annotation, *args, **kwargs):
         super(Transcripts, self).__init__(*args, **kwargs)
         self._evaluation_mode = False
@@ -39,25 +42,44 @@ class Transcripts(QWidget):
         transcript_layout.addWidget(transcript_ver)
         layout.addLayout(transcript_layout)
 
-        parse_layout = QHBoxLayout()
-        edit = QCheckBox(self)
-        edit.setText("edit transcript")
-        edit.setChecked(True)
-        edit.stateChanged.connect(self._editation)
-        parse_layout.addStretch()
-        parse_layout.addWidget(edit)
-
-        self.edit = edit
-        self.problems = QCheckBox('show problems')
-        self.problems.setChecked(True)
-        parse_layout.addWidget(self.problems)
-        layout.addLayout(parse_layout)
-
         transcript = Transcript(self)
         transcript.setEditTriggers(QAbstractItemView.NoEditTriggers)
         transcript.visible_rows_changed.connect(self._visible_rows_changed)
         transcript.setContextMenuPolicy(Qt.ActionsContextMenu)
         self.transcript = transcript
+
+        #create toolbar and add all actions to it
+
+        self.toolbar = QToolBar("Transcript toolbar")
+        self.toolbar.setMovable(False)
+        layout.addWidget(self.toolbar)
+
+        self.insertingAction = QAction('Insert row', transcript)
+        self.insertingAction.setShortcuts(['Ctrl+I', 'Insert'])
+        self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
+        self.insertingAction.triggered.connect(self._insert_triggered)
+        self.toolbar.addAction(self.insertingAction)
+        
+        self.deleteAction = QAction('Delete selected', transcript)
+        self.deleteAction.setShortcuts(['Ctrl+D', 'Del'])
+        self.deleteAction.setIcon(QIcon("alignmeet/icons/layout-join-vertical.png"))
+        self.deleteAction.triggered.connect(self._delete_triggered)
+        self.toolbar.addAction(self.deleteAction)
+
+        self.toolbar.addSeparator()
+
+        self.edit = QCheckBox("edit transcript")
+        self.edit.setChecked(True)
+        self.edit.stateChanged.connect(self._editation)
+        # parse_layout.addStretch()
+
+        self.problems = QCheckBox('show problems')
+        self.problems.setChecked(True)
+
+        self.toolbar.addWidget(self.edit)
+        self.toolbar.addWidget(self.problems)
+
+
         layout.addWidget(transcript)
         model = DAModel(self.annotation, transcript)
         self.annotation.modified_changed.connect(lambda : self._visible_rows_changed(self.transcript.get_visible_rows()))
@@ -65,7 +87,7 @@ class Transcripts(QWidget):
         self.model = model
         transcript.setModel(model)
         transcript.setSelectionBehavior(QAbstractItemView.SelectRows)
-        selection_model = transcript.selectionModel() #TODO: add to diagram somehow
+        selection_model = transcript.selectionModel()
         selection_model.selectionChanged.connect(self._selection_changed)
         editor = DialogActEditor(self)
         editor.end_editing.connect(self._editor_closed)
@@ -77,22 +99,6 @@ class Transcripts(QWidget):
         header = transcript.horizontalHeader()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Interactive)
         header.setSectionResizeMode(1, QtWidgets.QHeaderView.Stretch)
-
-        insert = QAction('Insert', transcript)
-        insert.setShortcuts(['Ctrl+I', 'Insert'])
-        insert.triggered.connect(self._insert_triggered)
-        self.insert = insert
-        transcript.addAction(insert)
-
-        delete = QAction('Delete', transcript)
-        delete.setShortcuts(['Ctrl+D', 'Del'])
-        delete.triggered.connect(self._delete_triggered)
-        self.delete = delete
-        transcript.addAction(delete)
-
-        a = QAction('', self)
-        a.setSeparator(True)
-        transcript.addAction(a)
 
         reset = QAction('Reset minutes', transcript)
         reset.setShortcuts(['Ctrl+m'])
@@ -117,9 +123,7 @@ class Transcripts(QWidget):
         transcript.addAction(expand)
 
         self.setLayout(layout)
-        edit.setChecked(False)
-
-
+        self.edit.setChecked(False)
 
         search_layout = QHBoxLayout()
         layout.addLayout(search_layout)
@@ -236,13 +240,14 @@ class Transcripts(QWidget):
         self.annotation.expand_speakers()
 
     def _editation(self, s):
-        self.insert.setEnabled(s)
-        self.delete.setEnabled(s)
+        self.insertingAction.setEnabled(s)
+        self.deleteAction.setEnabled(s)
         self.expand.setEnabled(s)
         if s:
             self.transcript.setEditTriggers(QAbstractItemView.AllEditTriggers)
         else:
             self.transcript.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
 
     @Slot(tuple)
     def _visible_rows_changed(self, rows):
@@ -280,7 +285,7 @@ class Transcripts(QWidget):
         selected_rows = self.selected_rows()
         self.annotation.selected_das = selected_rows
         if self.edit.isChecked():
-            self.delete.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
+            self.deleteAction.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
         self.reset.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
         self.resetp.setEnabled(len(selected_rows) > 0 and not self._evaluation_mode)
 
@@ -294,11 +299,8 @@ class Transcripts(QWidget):
             nr.text = ''
         else:
             r = self.annotation.das_count()
-        self.model.insertRow(r, nr)
-
-        self.transcript.clearSelection()
-        self.transcript.setCurrentIndex(self.model.index(r, 1))
-        #self.transcript.edit(self.model.index(r,1))
+        command = InsertCommand(self, r, nr, "Insert transcript line")
+        self.annotation.push_to_undo_stack(command)
 
     @Slot()
     def _reset_triggered(self):
@@ -311,9 +313,37 @@ class Transcripts(QWidget):
     @Slot()
     def _delete_triggered(self):
         r = list(set([x.row() for x in self.transcript.selectionModel().selectedRows()]))
-        self.model.removeRows(r[0], len(r))
+        command = DeleteCommand(self, r, f"Delete transcript line {r}")
+        self.annotation.push_to_undo_stack(command)
         
     @Slot()
     def _transcript_changed(self):
         t = self.transcript_ver.currentText()
         self.annotation.open_transcript(t)
+
+class InsertCommand(QUndoCommand):
+    def __init__(self, transcripts, row_index, new_da, text : str):
+        super().__init__(text)
+        self.transcripts = transcripts
+        self.row_index = row_index
+        self.new_da = new_da
+
+    def redo(self):
+        self.transcripts.model.insertRow(self.row_index, self.new_da)
+
+    def undo(self):
+        self.transcripts.model.removeRows(self.row_index, 1)
+
+class DeleteCommand(QUndoCommand):
+    def __init__(self, transcripts, row_indices, text : str):
+        super().__init__(text)
+        self.transcripts = transcripts
+        self.row_indices = row_indices
+
+    def redo(self):
+        self.old_lines = [self.transcripts.annotation.get_dialog_act(row_index) for row_index in self.row_indices]
+        self.transcripts.model.removeRows(self.row_indices[0], len(self.row_indices))
+
+    def undo(self):
+        for old_line, row_index in zip(self.old_lines, self.row_indices):
+            self.transcripts.model.insertRow(row_index, old_line)
