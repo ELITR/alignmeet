@@ -1,7 +1,7 @@
 import html
 
 from PySide2 import QtCore
-from PySide2.QtCore import Qt, QModelIndex, Slot
+from PySide2.QtCore import Qt, QModelIndex, Slot, QAbstractTableModel
 
 from ..problems import PROBLEMS
 from ..annotation import Annotation
@@ -85,8 +85,8 @@ class DAModel(QtCore.QAbstractTableModel):
         return True
 
     def _highlight(self, text, role):
-        text = html.escape(text)
         if self.highlight and role == Qt.DisplayRole:
+            text = html.escape(text)
             return self.highlight.sub('<b style="background-color: steelblue;">\g<0></b>', text)
         return text
 
