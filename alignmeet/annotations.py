@@ -41,6 +41,8 @@ class Annotations(QMainWindow):
 
         annotation = Annotation()
         self.annotation = annotation
+        self.annotation.undo_stack.canRedoChanged.connect(self._redo_toggle)
+        self.annotation.undo_stack.canUndoChanged.connect(self._undo_toggle)
 
         transcripts = Transcripts(annotation, self)
         transcripts.setDisabled(True)

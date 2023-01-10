@@ -327,6 +327,7 @@ class Transcripts(QWidget):
         
     @Slot()
     def _transcript_changed(self):
+        self.annotation.undo_stack.clear()
         t = self.transcript_ver.currentText()
         self.annotation.open_transcript(t)
 

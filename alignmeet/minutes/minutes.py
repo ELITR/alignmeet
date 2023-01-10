@@ -54,7 +54,6 @@ class Minutes(QWidget):
         minutes_layout = QHBoxLayout()
         minutes_layout.addWidget(label)
         minutes_layout.addWidget(minutes_ver)
-        # minutes_layout.addWidget(self.edit)
         layout.addLayout(minutes_layout)
 
         minutes_view = TableView(self)
@@ -205,6 +204,7 @@ class Minutes(QWidget):
         
     @Slot()
     def _minutes_changed(self):
+        self.annotation.undo_stack.clear()
         self.annotation.open_minutes(self.minutes_ver.currentText())
 
 class TableView(Transcript):

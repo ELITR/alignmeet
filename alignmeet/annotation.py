@@ -368,20 +368,14 @@ class Annotation(QObject):
 
     def push_to_undo_stack(self, command : QUndoCommand):
         self.undo_stack.push(command)
-        self.undo_toggle.emit(self.undo_stack.canUndo())
-        self.redo_toggle.emit(self.undo_stack.canRedo())
 
     @Slot()
     def undo(self):
         self.undo_stack.undo()
-        self.undo_toggle.emit(self.undo_stack.canUndo())
-        self.redo_toggle.emit(self.undo_stack.canRedo())
 
     @Slot()
     def redo(self):
         self.undo_stack.redo()
-        self.undo_toggle.emit(self.undo_stack.canUndo())
-        self.redo_toggle.emit(self.undo_stack.canRedo())
 
     @property
     def visible_minutes(self):
