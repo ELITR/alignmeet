@@ -1,3 +1,5 @@
+from copy import copy
+
 from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
 from PySide2.QtCore import QSettings, Slot, Qt, Signal
 from PySide2 import QtWidgets
@@ -58,7 +60,8 @@ class Minutes(QWidget):
 
         minutes_view = TableView(self)
         minutes_view.setContextMenuPolicy(Qt.ActionsContextMenu)
-        minutes_view.setItemDelegateForColumn(0, DialogActEditor(self))
+        self.editor = DialogActEditor(self)
+        minutes_view.setItemDelegateForColumn(0, self.editor)
         self.minutes_view = minutes_view
         self.model = MinutesModel(self.annotation)
         minutes_view.setModel(self.model)
@@ -106,6 +109,16 @@ class Minutes(QWidget):
         left.triggered.connect(self._left_triggered)
         self.left = left
         minutes_view.addAction(left)
+
+        self.joinDownAction = QAction('Join down', minutes_view)
+        self.joinDownAction.setIcon(QIcon("alignmeet/icons/arrow-stop-270.png"))
+        self.joinDownAction.triggered.connect(self._join_down_triggerd)
+        self.toolbar.addAction(self.joinDownAction)
+
+        self.joinUpAction = QAction('Join up', minutes_view)
+        self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
+        self.joinUpAction.triggered.connect(self._join_up_triggerd)
+        self.toolbar.addAction(self.joinUpAction)
 
         minutes_view.minute_selected.connect(self._minute_selected)
         self.setLayout(layout)
@@ -165,9 +178,31 @@ class Minutes(QWidget):
         command = DeleteCommand(self, r[0], "Delete minutes line")
         self.annotation.push_to_undo_stack(command)
 
+    @Slot()
+    def _join_up_triggerd(self):
+        r = self.minutes_view.selectionModel().selectedRows()[-1].row()
+        if r <= 0:
+            return
+        if self.editor.editor:
+            self.editor.editor.clearFocus()
+        command = JoinUpCommand(self, r, r-1, f"Join minutes line {r} to {r-1}")
+        self.annotation.push_to_undo_stack(command)
+
+    @Slot()
+    def _join_down_triggerd(self):
+        r = self.minutes_view.selectionModel().selectedRows()[0].row()
+        if r >= self.annotation.das_count()-1:
+            return
+        if self.editor.editor:
+            self.editor.editor.clearFocus()
+        command = JoinDownCommand(self, r, r+1, f"Join minutes line {r} to {r+1}")
+        self.annotation.push_to_undo_stack(command)
+
     def _editation(self, s):
         self.insertingAction.setEnabled(s and not self._evaluation_mode)
         self.deleteAction.setEnabled(s and not self._evaluation_mode)
+        self.joinDownAction.setEnabled(s and not self._evaluation_mode)
+        self.joinUpAction.setEnabled(s and not self._evaluation_mode)
         self.left.setEnabled(s and not self._evaluation_mode)
         self.right.setEnabled(s and not self._evaluation_mode)
         if s or self._evaluation_mode:
@@ -248,3 +283,40 @@ class DeleteCommand(QUndoCommand):
 
     def undo(self):
         self.minutes.model.insertRow(self.row_index, self.old_line)
+
+
+class JoinUpCommand(QUndoCommand):
+    def __init__(self, minutes, what, to, text):
+        super().__init__(text)
+        self.minutes = minutes
+        self.what = what
+        self.to = to
+
+    def redo(self):
+        self.first_old_line = copy(self.minutes.annotation.get_minute(self.to))
+        self.second_old_line = copy(self.minutes.annotation.get_minute(self.what))
+        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.minutes.annotation.remove_minutes(self.what, 1)
+
+    def undo(self):
+        self.minutes.annotation.remove_minutes(self.to, 1)
+        self.minutes.annotation.insert_minute(self.to, self.first_old_line)
+        self.minutes.annotation.insert_minute(self.what, self.second_old_line)
+
+class JoinDownCommand(QUndoCommand):
+    def __init__(self, minutes, what, to, text):
+        super().__init__(text)
+        self.minutes = minutes
+        self.what = what
+        self.to = to
+
+    def redo(self):
+        self.first_old_line = copy(self.minutes.annotation.get_minute(self.what))
+        self.second_old_line = copy(self.minutes.annotation.get_minute(self.to))
+        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.minutes.annotation.remove_minutes(self.what, 1)
+
+    def undo(self):
+        self.minutes.annotation.remove_minutes(self.what, 1)
+        self.minutes.annotation.insert_minute(self.what, self.first_old_line)
+        self.minutes.annotation.insert_minute(self.to, self.second_old_line)

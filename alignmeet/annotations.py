@@ -390,8 +390,11 @@ class Annotations(QMainWindow):
             if msg.exec_():
                 if QMessageBox.Save == msg.result():
                     self.save()
+                    self.annotation.undo_view.close()
                 elif QMessageBox.Cancel == msg.result():
                     event.ignore()
+                self.annotation.undo_view.close()
                 return
+
         self.annotation.undo_view.close()
         return super().closeEvent(event)

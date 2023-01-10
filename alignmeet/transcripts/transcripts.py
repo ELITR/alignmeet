@@ -68,6 +68,16 @@ class Transcripts(QWidget):
         self.deleteAction.triggered.connect(self._delete_triggered)
         self.toolbar.addAction(self.deleteAction)
 
+        self.joinDownAction = QAction('Join down', transcript)
+        self.joinDownAction.setIcon(QIcon("alignmeet/icons/arrow-stop-270.png"))
+        self.joinDownAction.triggered.connect(self._join_down_triggerd)
+        self.toolbar.addAction(self.joinDownAction)
+
+        self.joinUpAction = QAction('Join up', transcript)
+        self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
+        self.joinUpAction.triggered.connect(self._join_up_triggerd)
+        self.toolbar.addAction(self.joinUpAction)
+
         self.toolbar.addSeparator()
 
         self.resetAction = QAction('Reset minutes', transcript)
@@ -109,10 +119,10 @@ class Transcripts(QWidget):
         transcript.setSelectionBehavior(QAbstractItemView.SelectRows)
         selection_model = transcript.selectionModel()
         selection_model.selectionChanged.connect(self._selection_changed)
-        editor = DialogActEditor(self)
-        editor.end_editing.connect(self._editor_closed)
-        editor.remove_row.connect(self._delete_triggered)
-        transcript.setItemDelegateForColumn(1, editor)
+        self.editor = DialogActEditor(self)
+        self.editor.end_editing.connect(self._editor_closed)
+        self.editor.remove_row.connect(self._delete_triggered)
+        transcript.setItemDelegateForColumn(1, self.editor)
         self.speaker_editor = SpeakerEditor(self)
         transcript.setItemDelegateForColumn(0, self.speaker_editor)
         self.problems.stateChanged.connect(lambda x: transcript.showColumn(2) if self.problems.isChecked() else transcript.hideColumn(2))
@@ -251,6 +261,8 @@ class Transcripts(QWidget):
     def _editation(self, s):
         self.insertingAction.setEnabled(s)
         self.deleteAction.setEnabled(s)
+        self.joinUpAction.setEnabled(s)
+        self.joinDownAction.setEnabled(s)
         self.expand.setEnabled(s)
         if s:
             self.transcript.setEditTriggers(QAbstractItemView.AllEditTriggers)
@@ -322,7 +334,29 @@ class Transcripts(QWidget):
     @Slot()
     def _delete_triggered(self):
         r = list(set([x.row() for x in self.transcript.selectionModel().selectedRows()]))
+        if len(r) == 0:
+            return
         command = DeleteCommand(self, r, f"Delete transcript line {r}")
+        self.annotation.push_to_undo_stack(command)
+    
+    @Slot()
+    def _join_up_triggerd(self):
+        r = self.transcript.selectionModel().selectedRows()[-1].row()
+        if r <= 0:
+            return
+        if self.editor.editor:
+            self.editor.editor.clearFocus()
+        command = JoinUpCommand(self, r, r-1, f"Join line {r} to {r-1}")
+        self.annotation.push_to_undo_stack(command)
+
+    @Slot()
+    def _join_down_triggerd(self):
+        r = self.transcript.selectionModel().selectedRows()[0].row()
+        if r >= self.annotation.das_count()-1:
+            return
+        if self.editor.editor:
+            self.editor.editor.clearFocus()
+        command = JoinDownCommand(self, r, r+1, f"Join line {r} to {r+1}")
         self.annotation.push_to_undo_stack(command)
         
     @Slot()
@@ -357,3 +391,39 @@ class DeleteCommand(QUndoCommand):
     def undo(self):
         for old_line, row_index in zip(self.old_lines, self.row_indices):
             self.transcripts.model.insertRow(row_index, old_line)
+
+class JoinUpCommand(QUndoCommand):
+    def __init__(self, transctipts, what, to, text):
+        super().__init__(text)
+        self.transctipts = transctipts
+        self.what = what
+        self.to = to
+
+    def redo(self):
+        self.first_old_line = copy(self.transctipts.annotation.get_dialog_act(self.to))
+        self.second_old_line = copy(self.transctipts.annotation.get_dialog_act(self.what))
+        self.transctipts.annotation.get_dialog_act(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.transctipts.annotation.remove_das(self.what, 1)
+
+    def undo(self):
+        self.transctipts.annotation.remove_das(self.to, 1)
+        self.transctipts.annotation.insert_da(self.to, self.first_old_line)
+        self.transctipts.annotation.insert_da(self.what, self.second_old_line)
+
+class JoinDownCommand(QUndoCommand):
+    def __init__(self, transctipts, what, to, text):
+        super().__init__(text)
+        self.transctipts = transctipts
+        self.what = what
+        self.to = to
+
+    def redo(self):
+        self.first_old_line = copy(self.transctipts.annotation.get_dialog_act(self.what))
+        self.second_old_line = copy(self.transctipts.annotation.get_dialog_act(self.to))
+        self.transctipts.annotation.get_dialog_act(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.transctipts.annotation.remove_das(self.what, 1)
+
+    def undo(self):
+        self.transctipts.annotation.remove_das(self.what, 1)
+        self.transctipts.annotation.insert_da(self.what, self.first_old_line)
+        self.transctipts.annotation.insert_da(self.to, self.second_old_line)
