@@ -90,6 +90,21 @@ class Minutes(QWidget):
         self.deleteAction.triggered.connect(self._delete_triggered)
         self.toolbar.addAction(self.deleteAction)
 
+        self.joinDownAction = QAction('Join down', minutes_view)
+        self.joinDownAction.setIcon(QIcon("alignmeet/icons/arrow-stop-270.png"))
+        self.joinDownAction.triggered.connect(self._join_down_triggerd)
+        self.toolbar.addAction(self.joinDownAction)
+
+        self.joinUpAction = QAction('Join up', minutes_view)
+        self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
+        self.joinUpAction.triggered.connect(self._join_up_triggerd)
+        self.toolbar.addAction(self.joinUpAction)
+
+        self.splitAction = QAction('Split at cursor', minutes_view)
+        self.splitAction.setIcon(QIcon("alignmeet/icons/arrow-split-270.png"))
+        # self.splitAction.triggered.connect(self._split_triggerd)
+        # self.toolbar.addAction(self.splitAction)
+
         empty = QWidget()
         empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         self.toolbar.addWidget(empty)
@@ -109,16 +124,6 @@ class Minutes(QWidget):
         left.triggered.connect(self._left_triggered)
         self.left = left
         minutes_view.addAction(left)
-
-        self.joinDownAction = QAction('Join down', minutes_view)
-        self.joinDownAction.setIcon(QIcon("alignmeet/icons/arrow-stop-270.png"))
-        self.joinDownAction.triggered.connect(self._join_down_triggerd)
-        self.toolbar.addAction(self.joinDownAction)
-
-        self.joinUpAction = QAction('Join up', minutes_view)
-        self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
-        self.joinUpAction.triggered.connect(self._join_up_triggerd)
-        self.toolbar.addAction(self.joinUpAction)
 
         minutes_view.minute_selected.connect(self._minute_selected)
         self.setLayout(layout)
@@ -203,6 +208,7 @@ class Minutes(QWidget):
         self.deleteAction.setEnabled(s and not self._evaluation_mode)
         self.joinDownAction.setEnabled(s and not self._evaluation_mode)
         self.joinUpAction.setEnabled(s and not self._evaluation_mode)
+        self.splitAction.setEnabled(s and not self._evaluation_mode)
         self.left.setEnabled(s and not self._evaluation_mode)
         self.right.setEnabled(s and not self._evaluation_mode)
         if s or self._evaluation_mode:
