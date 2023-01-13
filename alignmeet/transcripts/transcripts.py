@@ -1,9 +1,9 @@
 import re
 from copy import copy
 
-from PySide2.QtWidgets import QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
+from PySide2.QtWidgets import QApplication, QLineEdit, QPushButton, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
 from PySide2.QtCore import Qt, Slot, Signal
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon, QKeyEvent
 from PySide2 import QtWidgets
 from ..transcripts.dialog_act_model import DAModel
 from ..transcripts.speaker_editor import SpeakerEditor
@@ -77,6 +77,11 @@ class Transcripts(QWidget):
         self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
         self.joinUpAction.triggered.connect(self._join_up_triggerd)
         self.toolbar.addAction(self.joinUpAction)
+
+        self.splitAction = QAction('Split at cursor (Ctrl+Enter)', transcript)
+        self.splitAction.setIcon(QIcon("alignmeet/icons/arrow-split-270.png"))
+        self.splitAction.triggered.connect(self._split_triggered)
+        self.toolbar.addAction(self.splitAction)
 
         self.toolbar.addSeparator()
 
@@ -358,6 +363,11 @@ class Transcripts(QWidget):
             self.editor.editor.clearFocus()
         command = JoinDownCommand(self, r, r+1, f"Join line {r} to {r+1}")
         self.annotation.push_to_undo_stack(command)
+
+    @Slot()
+    def _split_triggered(self):
+        QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
+
         
     @Slot()
     def _transcript_changed(self):

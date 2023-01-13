@@ -30,7 +30,7 @@ class DialogActEditor(QtWidgets.QStyledItemDelegate):
     def eventFilter(self, source, event):
         if event.type() == QtCore.QEvent.KeyPress:
             if event.key() in (QtCore.Qt.Key_Return, QtCore.Qt.Key_Enter):
-                if event.modifiers() & QtCore.Qt.ControlModifier == QtCore.Qt.ControlModifier: #??? TODO
+                if event.modifiers() == QtCore.Qt.ControlModifier:
                     if self.editor is not None:
                         pos = self.editor.textCursor().position()
                         self.textToSplit = pos

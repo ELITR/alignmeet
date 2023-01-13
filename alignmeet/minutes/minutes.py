@@ -1,9 +1,9 @@
 from copy import copy
 
-from PySide2.QtWidgets import QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
+from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
 from PySide2.QtCore import QSettings, Slot, Qt, Signal
 from PySide2 import QtWidgets
-from PySide2.QtGui import QIcon
+from PySide2.QtGui import QIcon, QKeyEvent
 
 from .minutes_model import MinutesModel
 from ..annotation import Annotation, Minute
@@ -100,10 +100,10 @@ class Minutes(QWidget):
         self.joinUpAction.triggered.connect(self._join_up_triggerd)
         self.toolbar.addAction(self.joinUpAction)
 
-        self.splitAction = QAction('Split at cursor', minutes_view)
+        self.splitAction = QAction('Split at cursor (Ctrl+Enter)', minutes_view)
         self.splitAction.setIcon(QIcon("alignmeet/icons/arrow-split-270.png"))
-        # self.splitAction.triggered.connect(self._split_triggerd)
-        # self.toolbar.addAction(self.splitAction)
+        self.splitAction.triggered.connect(self._split_triggered)
+        self.toolbar.addAction(self.splitAction)
 
         empty = QWidget()
         empty.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
@@ -202,6 +202,10 @@ class Minutes(QWidget):
             self.editor.editor.clearFocus()
         command = JoinDownCommand(self, r, r+1, f"Join minutes line {r} to {r+1}")
         self.annotation.push_to_undo_stack(command)
+
+    @Slot()
+    def _split_triggered(self):
+        QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
 
     def _editation(self, s):
         self.insertingAction.setEnabled(s and not self._evaluation_mode)
