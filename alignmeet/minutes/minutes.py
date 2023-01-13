@@ -305,7 +305,7 @@ class JoinUpCommand(QUndoCommand):
     def redo(self):
         self.first_old_line = copy(self.minutes.annotation.get_minute(self.to))
         self.second_old_line = copy(self.minutes.annotation.get_minute(self.what))
-        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text} {self.second_old_line.text}"
         self.minutes.annotation.remove_minutes(self.what, 1)
 
     def undo(self):
@@ -323,7 +323,7 @@ class JoinDownCommand(QUndoCommand):
     def redo(self):
         self.first_old_line = copy(self.minutes.annotation.get_minute(self.what))
         self.second_old_line = copy(self.minutes.annotation.get_minute(self.to))
-        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        self.minutes.annotation.get_minute(self.to).text = f"{self.first_old_line.text} {self.second_old_line.text}"
         self.minutes.annotation.remove_minutes(self.what, 1)
 
     def undo(self):

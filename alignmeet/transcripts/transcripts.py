@@ -268,6 +268,7 @@ class Transcripts(QWidget):
         self.deleteAction.setEnabled(s)
         self.joinUpAction.setEnabled(s)
         self.joinDownAction.setEnabled(s)
+        self.splitAction.setEnabled(s)
         self.expand.setEnabled(s)
         if s:
             self.transcript.setEditTriggers(QAbstractItemView.AllEditTriggers)
@@ -410,9 +411,18 @@ class JoinUpCommand(QUndoCommand):
         self.to = to
 
     def redo(self):
+        line_to_ref = self.transctipts.annotation.get_dialog_act(self.to)
+        #save old version
         self.first_old_line = copy(self.transctipts.annotation.get_dialog_act(self.to))
         self.second_old_line = copy(self.transctipts.annotation.get_dialog_act(self.what))
-        self.transctipts.annotation.get_dialog_act(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        #change the targer line to new version
+        line_to_ref.text = f"{self.first_old_line.text} {self.second_old_line.text}"
+        if line_to_ref.speaker != '':
+            if self.second_old_line.speaker != '' and self.second_old_line.speaker != line_to_ref.speaker:
+                line_to_ref.speaker = f'{line_to_ref.speaker},{self.second_old_line.speaker}' #TODO: report error
+        else:
+            line_to_ref.speaker = self.second_old_line.speaker
+        #remove old line
         self.transctipts.annotation.remove_das(self.what, 1)
 
     def undo(self):
@@ -428,9 +438,17 @@ class JoinDownCommand(QUndoCommand):
         self.to = to
 
     def redo(self):
+        line_to_ref = self.transctipts.annotation.get_dialog_act(self.to)
+        #save old version
         self.first_old_line = copy(self.transctipts.annotation.get_dialog_act(self.what))
         self.second_old_line = copy(self.transctipts.annotation.get_dialog_act(self.to))
-        self.transctipts.annotation.get_dialog_act(self.to).text = f"{self.first_old_line.text}{self.second_old_line.text}"
+        #change the targer line to new version
+        self.transctipts.annotation.get_dialog_act(self.to).text = f"{self.first_old_line.text} {self.second_old_line.text}"
+        if line_to_ref.speaker != '':
+            if self.first_old_line.speaker != '' and self.first_old_line.speaker != line_to_ref.speaker:
+                line_to_ref.speaker = f'{self.first_old_line.speaker},{line_to_ref.speaker}' #TODO: report error
+        else:
+            line_to_ref.speaker = self.first_old_line.speaker
         self.transctipts.annotation.remove_das(self.what, 1)
 
     def undo(self):
