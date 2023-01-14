@@ -102,6 +102,8 @@ class DAModel(QtCore.QAbstractTableModel):
             if j == 2:
                 if d.problem is None:
                     return ""
+                elif isinstance(d.problem, str):
+                    return d.problem
                 else:
                     return PROBLEMS[d.problem]
         elif role == Qt.BackgroundRole or role == Qt.ForegroundRole:

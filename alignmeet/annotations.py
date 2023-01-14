@@ -5,8 +5,8 @@ import glob
 import subprocess
 from subprocess import Popen
 
-from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog, QAction, QToolBar
-from PySide2.QtCore import Slot, Qt, QSettings
+from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog, QAction, QToolBar, QDialog, QDialogButtonBox, QLabel, QLineEdit
+from PySide2.QtCore import Slot, Qt, QSettings, Signal
 from PySide2.QtGui import QIcon
 
 from .transcripts.transcripts import Transcripts
@@ -31,6 +31,7 @@ class Annotations(QMainWindow):
         self._gui_setup()
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.is_git = False
+        self.new_problem = ''
 
     def _gui_setup(self):
         layout = QHBoxLayout()
@@ -58,11 +59,12 @@ class Annotations(QMainWindow):
         minutes.setDisabled(True)
         self.minutes = minutes
 
-        problems = Problems(self)
+        problems = Problems(annotation, self)
         problems.setEnabled(False)
         problems.problem_selected.connect(self.annotation.set_problem)
         problems.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.problems = problems
+        annotation.problems_chaged.connect(problems.refresh)
         
         splitter_right = QSplitter(Qt.Vertical)
         splitter_right.addWidget(minutes)
@@ -103,10 +105,6 @@ class Annotations(QMainWindow):
         self.annotation.redo_toggle.connect(self._redo_toggle)
         self.editHistoryAction      = self._createAction('Show edit &history', 'Alt+h', self.annotation.show_edit_history)
         self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
-        self.addProblemAction       = self._createAction('&Add problem', '', None)
-        self.addProblemAction.setEnabled(False)
-        self.removeProblemAction    = self._createAction('R&emove problem', '', None)
-        self.removeProblemAction.setEnabled(False)
 
         # create menu bar
         menu = self.menuBar()
@@ -135,8 +133,8 @@ class Annotations(QMainWindow):
 
         edit_menu.addSeparator()
 
-        edit_menu.addAction(self.addProblemAction)
-        edit_menu.addAction(self.removeProblemAction)
+        edit_menu.addAction(self.problems.addProblemAction)
+        edit_menu.addAction(self.problems.refreshProblemsAction)
 
         edit_menu.addSeparator()
 
@@ -314,8 +312,8 @@ class Annotations(QMainWindow):
                 io.open(os.path.join(m,'minutes.txt'),'w').write('')
                 io.open(os.path.join(t,'transcript.txt'),'w').write('')
                 self.saveAction.setEnabled(True)
-                self.addProblemAction.setEnabled(True)
-                self.removeProblemAction.setEnabled(True)
+                self.problems.addProblemAction.setEnabled(True)
+                self.problems.refreshProblemsAction.setEnabled(True)
             if self._check_path(path):
                 self.annotation.set_path(path)
                 self.transcripts.setEnabled(True)
@@ -332,8 +330,8 @@ class Annotations(QMainWindow):
                                 break
                 self.is_git = False
                 self.saveAction.setEnabled(True)
-                self.addProblemAction.setEnabled(True)
-                self.removeProblemAction.setEnabled(True)
+                self.problems.addProblemAction.setEnabled(True)
+                self.problems.refreshProblemsAction.setEnabled(True)
                 return True
             else:
                 msg = QMessageBox()

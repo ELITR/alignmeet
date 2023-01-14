@@ -72,6 +72,7 @@ class Annotation(QObject):
     path_changed = Signal()
     undo_toggle = Signal(bool)
     redo_toggle = Signal(bool)
+    problems_chaged = Signal()
 
     def __init__(self, parent = None):
         super(Annotation, self).__init__(parent)
@@ -243,12 +244,21 @@ class Annotation(QObject):
                     idx = int(line[0]) - 1
                     d = self._das[idx]
                     minute = int(line[1]) - 1 if line[1].isdigit() else None
-                    problem = int(line[2]) - 1 if line[2].isdigit() else None
+                    if line[2].isdigit():
+                        num = int(line[2])-1
+                        problem = int(line[2]) - 1 if num >= 0 else None
+                    elif len(line[2]) >= 2 and line[2][:2] == '0:':
+                        #custom problem
+                        problem = line[2][2:]
+                    else:
+                        problem = None
+
                     d.problem = problem
                     try:
                         d.minute = self._minutes[minute]
                     except:
                         d.minute = None
+            self.problems_chaged.emit()
 
     def open_evaluation(self):
         self._document_level_adequacy = 1.0
@@ -318,10 +328,16 @@ class Annotation(QObject):
             for idx, da in enumerate(self._das):
                 if da.minute != None or da.problem != None:
                     midx = self.minutes_index_map[da.minute]
+                    if isinstance(da.problem, str):
+                        problem = f'0:{da.problem}'
+                    elif da.problem:
+                        problem = da.problem + 1
+                    else:
+                        problem = None
                     f.write('{} {} {}\n'.format(
                         idx + 1,
                         midx + 1 if midx is not None else midx,
-                        da.problem + 1 if da.problem is not None else da.problem
+                        problem
                     ))
 
     def _save_evaluation(self):
@@ -359,6 +375,7 @@ class Annotation(QObject):
             print("no das selected, modified=false")
             self.modified = False
 
+    @Slot(object)
     def set_problem(self, problem = None):
         if len(self.selected_das) > 0:
             command = SetProblemCommand(self, self.selected_das, problem, f"Set problem {problem}")
@@ -428,7 +445,7 @@ class AlignCommand(QUndoCommand):
         self.annotation.modified = True
 
 class SetProblemCommand(QUndoCommand):
-    def __init__(self, annotation, transcript_rows : set, problem : int, text: str) -> None:
+    def __init__(self, annotation, transcript_rows : set, problem, text: str) -> None:
         super().__init__(text)
         self.annotation = annotation
         self.transcript_rows = transcript_rows
