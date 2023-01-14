@@ -35,8 +35,6 @@ class Problems(QWidget):
         problems.problem_selected.connect(self.problem_selected)
         problems.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addWidget(problems, 0)
-        
-
 
         problems.clearSelection()
         layout.setSizeConstraint(QVBoxLayout.SetMinimumSize)

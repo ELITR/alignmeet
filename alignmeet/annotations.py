@@ -129,12 +129,30 @@ class Annotations(QMainWindow):
         edit_menu.addAction(self.redoAction)
         edit_menu.addAction(self.editHistoryAction)
 
+        edit_menu.addSeparator()
+
+        minutes_edit_menu = edit_menu.addMenu('&Minutes')
+
+        minutes_edit_menu.addAction(self.transcripts.insertingAction)
+        minutes_edit_menu.addAction(self.transcripts.deleteAction)
+        minutes_edit_menu.addAction(self.transcripts.joinDownAction)
+        minutes_edit_menu.addAction(self.transcripts.joinUpAction)
+        minutes_edit_menu.addAction(self.transcripts.splitAction)
+
+        transcript_edit_menu = edit_menu.addMenu('&Transcript')
+
+        transcript_edit_menu.addAction(self.minutes.insertingAction)
+        transcript_edit_menu.addAction(self.minutes.deleteAction)
+        transcript_edit_menu.addAction(self.minutes.joinDownAction)
+        transcript_edit_menu.addAction(self.minutes.joinUpAction)
+        transcript_edit_menu.addAction(self.minutes.splitAction)
+
         playback_menu = menu.addMenu('&Playback')
         playback_menu.addAction(self.openAudioAction)
         playback_menu.addSeparator()
         playback_menu.addActions(player.playback_actions)
 
-        # Add toolbar (with undo redo, edit mode toggle, TODO split and join line)
+        # Add toolbar (with undo redo, edit mode toggle)
         toolbar = QToolBar("Main Toolbar")
         toolbar.setMovable(False)
         self.addToolBar(toolbar)

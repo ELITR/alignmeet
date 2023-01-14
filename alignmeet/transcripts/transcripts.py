@@ -54,7 +54,7 @@ class Transcripts(QWidget):
         self.toolbar.setMovable(False)
         layout.addWidget(self.toolbar)
 
-        self.insertingAction = QAction('Insert row', transcript)
+        self.insertingAction = QAction('Insert line below', transcript)
         self.insertingAction.setShortcuts(['Ctrl+I', 'Insert'])
         self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
         self.insertingAction.setToolTip('Insert row (Ctrl+I)')
@@ -319,13 +319,13 @@ class Transcripts(QWidget):
     @Slot()
     def _insert_triggered(self):
         r = self.transcript.selectionModel().selectedIndexes()
+        if len(r) == 0:
+            return
+        r = r[-1].row() + 1
+        nr = copy(self.annotation.get_dialog_act(r - 1))
+        nr.text = ''
         nr = DialogAct()
-        if len(r) > 0:
-            r = r[-1].row() + 1
-            nr = copy(self.annotation.get_dialog_act(r - 1))
-            nr.text = ''
-        else:
-            r = self.annotation.das_count()
+
         command = InsertCommand(self, r, nr, "Insert transcript line")
         self.annotation.push_to_undo_stack(command)
 
@@ -347,7 +347,10 @@ class Transcripts(QWidget):
     
     @Slot()
     def _join_up_triggerd(self):
-        r = self.transcript.selectionModel().selectedRows()[-1].row()
+        sel = self.transcript.selectionModel().selectedRows()
+        if len(sel) == 0:
+            return
+        r = sel[-1].row()
         if r <= 0:
             return
         if self.editor.editor:
@@ -357,7 +360,10 @@ class Transcripts(QWidget):
 
     @Slot()
     def _join_down_triggerd(self):
-        r = self.transcript.selectionModel().selectedRows()[0].row()
+        sel = self.transcript.selectionModel().selectedRows()
+        if len(sel) == 0:
+            return
+        r = [0].row()
         if r >= self.annotation.das_count()-1:
             return
         if self.editor.editor:
@@ -367,7 +373,8 @@ class Transcripts(QWidget):
 
     @Slot()
     def _split_triggered(self):
-        QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
+        if self.editor.editor:
+            QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
 
         
     @Slot()

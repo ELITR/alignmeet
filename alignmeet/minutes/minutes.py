@@ -76,7 +76,7 @@ class Minutes(QWidget):
         self.toolbar.setMovable(False)
         layout.addWidget(self.toolbar)
 
-        self.insertingAction = QAction('Insert', minutes_view)
+        self.insertingAction = QAction('Insert line below', minutes_view)
         self.insertingAction.setShortcuts(['alt+I', '+Insert'])
         self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
         self.insertingAction.setToolTip('Insert row (Alt+I)')
@@ -162,11 +162,10 @@ class Minutes(QWidget):
         if self._evaluation_mode:
             return
         r = self.selected_rows()
+        if len(r) == 0:
+            return
+        r = r[-1] + 1
         nr = Minute()
-        if len(r) > 0:
-            r = r[-1] + 1
-        else:
-            r = self.annotation.minutes_count()
 
         command = InsertCommand(self, r, nr, "Insert minutes line")
         self.annotation.push_to_undo_stack(command)
@@ -185,7 +184,10 @@ class Minutes(QWidget):
 
     @Slot()
     def _join_up_triggerd(self):
-        r = self.minutes_view.selectionModel().selectedRows()[-1].row()
+        sel = self.minutes_view.selectionModel().selectedRows()
+        if len(sel) == 0:
+            return
+        r = sel[-1].row()
         if r <= 0:
             return
         if self.editor.editor:
@@ -195,7 +197,10 @@ class Minutes(QWidget):
 
     @Slot()
     def _join_down_triggerd(self):
-        r = self.minutes_view.selectionModel().selectedRows()[0].row()
+        sel = self.minutes_view.selectionModel().selectedRows()
+        if len(sel) == 0:
+            return
+        r = sel[0].row()
         if r >= self.annotation.das_count()-1:
             return
         if self.editor.editor:
@@ -205,7 +210,8 @@ class Minutes(QWidget):
 
     @Slot()
     def _split_triggered(self):
-        QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
+        if self.editor.editor:
+            QApplication.postEvent(self.editor.editor, QKeyEvent(QKeyEvent.KeyPress, Qt.Key_Enter, Qt.ControlModifier))
 
     def _editation(self, s):
         self.insertingAction.setEnabled(s and not self._evaluation_mode)
