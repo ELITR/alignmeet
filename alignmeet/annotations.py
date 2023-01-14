@@ -90,6 +90,7 @@ class Annotations(QMainWindow):
         self.evalModeAction         = self._createAction('Evaluation mode', 'Ctrl+e', self.set_evaluation_mode)
         self.evalModeAction.setCheckable(True)
         self.saveAction             = self._createAction('&Save', 'Ctrl+s', self.save)
+        self.saveAction.setEnabled(False)
         self.settingsAction         = self._createAction('S&ettings', 'Ctrl++', lambda : Settings(self).exec_())
         self.closeAction            = self._createAction('&Close', 'Alt+c', self.close)
         self.undoAction             = self._createAction('&Undo', 'Ctrl+z', self.annotation.undo)
@@ -102,7 +103,10 @@ class Annotations(QMainWindow):
         self.annotation.redo_toggle.connect(self._redo_toggle)
         self.editHistoryAction      = self._createAction('Show edit &history', 'Alt+h', self.annotation.show_edit_history)
         self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
-
+        self.addProblemAction       = self._createAction('&Add problem', '', None)
+        self.addProblemAction.setEnabled(False)
+        self.removeProblemAction    = self._createAction('R&emove problem', '', None)
+        self.removeProblemAction.setEnabled(False)
 
         # create menu bar
         menu = self.menuBar()
@@ -131,13 +135,10 @@ class Annotations(QMainWindow):
 
         edit_menu.addSeparator()
 
-        minutes_edit_menu = edit_menu.addMenu('&Minutes')
+        edit_menu.addAction(self.addProblemAction)
+        edit_menu.addAction(self.removeProblemAction)
 
-        minutes_edit_menu.addAction(self.transcripts.insertingAction)
-        minutes_edit_menu.addAction(self.transcripts.deleteAction)
-        minutes_edit_menu.addAction(self.transcripts.joinDownAction)
-        minutes_edit_menu.addAction(self.transcripts.joinUpAction)
-        minutes_edit_menu.addAction(self.transcripts.splitAction)
+        edit_menu.addSeparator()
 
         transcript_edit_menu = edit_menu.addMenu('&Transcript')
 
@@ -146,6 +147,14 @@ class Annotations(QMainWindow):
         transcript_edit_menu.addAction(self.minutes.joinDownAction)
         transcript_edit_menu.addAction(self.minutes.joinUpAction)
         transcript_edit_menu.addAction(self.minutes.splitAction)
+
+        minutes_edit_menu = edit_menu.addMenu('&Minutes')
+
+        minutes_edit_menu.addAction(self.transcripts.insertingAction)
+        minutes_edit_menu.addAction(self.transcripts.deleteAction)
+        minutes_edit_menu.addAction(self.transcripts.joinDownAction)
+        minutes_edit_menu.addAction(self.transcripts.joinUpAction)
+        minutes_edit_menu.addAction(self.transcripts.splitAction)
 
         playback_menu = menu.addMenu('&Playback')
         playback_menu.addAction(self.openAudioAction)
@@ -304,6 +313,9 @@ class Annotations(QMainWindow):
                 os.mkdir(m)
                 io.open(os.path.join(m,'minutes.txt'),'w').write('')
                 io.open(os.path.join(t,'transcript.txt'),'w').write('')
+                self.saveAction.setEnabled(True)
+                self.addProblemAction.setEnabled(True)
+                self.removeProblemAction.setEnabled(True)
             if self._check_path(path):
                 self.annotation.set_path(path)
                 self.transcripts.setEnabled(True)
@@ -319,6 +331,9 @@ class Annotations(QMainWindow):
                             if self.player.open_audio(os.path.normpath(os.path.join(path, f))):
                                 break
                 self.is_git = False
+                self.saveAction.setEnabled(True)
+                self.addProblemAction.setEnabled(True)
+                self.removeProblemAction.setEnabled(True)
                 return True
             else:
                 msg = QMessageBox()
