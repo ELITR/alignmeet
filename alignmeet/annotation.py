@@ -39,7 +39,7 @@ class Minute:
 class DialogAct:
     # class for data of a single transcript segment
     speakers = set()
-    def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None):
+    def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None, is_tentative = False):
         self._speaker = speaker
         if speaker is None or len(speaker) < 1:
             for f in re.findall('^\s*\([^)]+\)', text):
@@ -49,6 +49,7 @@ class DialogAct:
         self.speaker = speaker
         self.text = text
         self.minute = minute
+        self.is_tentative = is_tentative
         self.problem = problem
         self.start = float(start)
         self.end = float(end)
@@ -74,7 +75,7 @@ class Annotation(QObject):
     redo_toggle = Signal(bool)
     problems_chaged = Signal()
 
-    def __init__(self, parent = None):
+    def __init__(self, undo = True, parent = None):
         super(Annotation, self).__init__(parent)
         self._path = ""
         self._modified = False
@@ -92,8 +93,9 @@ class Annotation(QObject):
         self._minutes = []
         self._document_level_adequacy = 1.0 #shows up at the bottom, how is it stored in the files?
 
-        self.undo_stack = QUndoStack(self) # stores QUndoCommands (user actions) that can be undone/redone
-        self.undo_view = QUndoView(self.undo_stack)
+        if undo:
+            self.undo_stack = QUndoStack(self) # stores QUndoCommands (user actions) that can be undone/redone
+            self.undo_view = QUndoView(self.undo_stack)
 
     def show_edit_history(self):
         self.undo_view.show()
