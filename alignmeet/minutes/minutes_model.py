@@ -7,7 +7,7 @@ class MinutesModel(QtCore.QAbstractTableModel):
         super(MinutesModel, self).__init__()
         self.annotation = annotation
         self.annotation.modified_changed.connect(self.update)
-        self.setHeaderData(0, QtCore.Qt.Horizontal, "Summary")
+        self.setHeaderData(0, QtCore.Qt.Horizontal, "Minutes")
         self.annotation.visible_minutes_changed.connect(self.update)
         self._evaluation_mode = False
 
@@ -30,15 +30,15 @@ class MinutesModel(QtCore.QAbstractTableModel):
         if role == Qt.DisplayRole:
             if orientation == Qt.Horizontal:
                 if index == 0:
-                    return 'Summary'
+                    return 'Minutes'
                 if index == 1:
-                    return 'Adequacy'
+                    return 'Adq.'
                 if index == 2:
-                    return 'Grammaticality'
+                    return 'Gram.'
                 if index == 3:
-                    return 'Fluency'
+                    return 'Fluen.'
                 if index == 4:
-                    return 'Relevance'
+                    return 'Relev.'
         return super().headerData(index, orientation, role=role)
 
     def setData(self, index, data, role=Qt.EditRole):

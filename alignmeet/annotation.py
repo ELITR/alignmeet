@@ -39,7 +39,7 @@ class Minute:
 class DialogAct:
     # class for data of a single transcript segment
     speakers = set()
-    def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None, is_tentative = False):
+    def __init__(self,  text = '', speaker = '',start = -1, end = -1, minute : Minute = None, problem = None, is_final = True):
         self._speaker = speaker
         if speaker is None or len(speaker) < 1:
             for f in re.findall('^\s*\([^)]+\)', text):
@@ -49,7 +49,7 @@ class DialogAct:
         self.speaker = speaker
         self.text = text
         self.minute = minute
-        self.is_tentative = is_tentative
+        self.is_final = is_final
         self.problem = problem
         self.start = float(start)
         self.end = float(end)
@@ -92,6 +92,8 @@ class Annotation(QObject):
         self._das = []
         self._minutes = []
         self._document_level_adequacy = 1.0 #shows up at the bottom, how is it stored in the files?
+        
+        self.threshold = 0.5 #for autoalign
 
         if undo:
             self.undo_stack = QUndoStack(self) # stores QUndoCommands (user actions) that can be undone/redone
@@ -245,7 +247,16 @@ class Annotation(QObject):
                     line = line.strip().split(' ')
                     idx = int(line[0]) - 1
                     d = self._das[idx]
-                    minute = int(line[1]) - 1 if line[1].isdigit() else None
+                    
+                    final = True
+                    if line[1].isdigit():
+                        minute = int(line[1]) - 1
+                    elif str.endswith(line[1], '?') and line[1][:-1].isdigit():
+                        minute = int(line[1][:-1]) - 1
+                        final = False
+                    else:
+                        minute = None
+                    
                     if line[2].isdigit():
                         num = int(line[2])-1
                         problem = int(line[2]) - 1 if num >= 0 else None
@@ -256,6 +267,7 @@ class Annotation(QObject):
                         problem = None
 
                     d.problem = problem
+                    d.is_final = final
                     try:
                         d.minute = self._minutes[minute]
                     except:
@@ -284,6 +296,7 @@ class Annotation(QObject):
                         m.adequacy = e[0]
                         m.grammaticality = e[1]
                         m.fluency = e[2]
+                        m.relevance = e[3] if len(e) > 3 else 1.0
 
     def _save_transcript(self):
         full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, self._transcript_file))
@@ -336,9 +349,10 @@ class Annotation(QObject):
                         problem = da.problem + 1
                     else:
                         problem = None
-                    f.write('{} {} {}\n'.format(
+                    f.write('{} {}{} {}\n'.format(
                         idx + 1,
                         midx + 1 if midx is not None else midx,
+                        '?' if not da.is_final else '',
                         problem
                     ))
 
@@ -357,7 +371,7 @@ class Annotation(QObject):
             f.write(f'{self._document_level_adequacy}\n')
             for m in self._minutes:
                 if any([d.minute == m for d in self._das]):
-                    f.write(f'{m.adequacy}{SEPARATOR}{m.grammaticality}{SEPARATOR}{m.fluency}\n')
+                    f.write(f'{m.adequacy}{SEPARATOR}{m.grammaticality}{SEPARATOR}{m.fluency}{SEPARATOR}{m.relevance}\n')
                 else:
                     f.write(f'{-1}{SEPARATOR}{-1}{SEPARATOR}{-1}\n')
 
@@ -370,7 +384,16 @@ class Annotation(QObject):
         self.modified = False
 
     def set_minute(self, minute = None):
-        if len(self.selected_das) > 0:
+        same = True
+        for d in self.selected_das:
+            if not d.minute == minute:
+                same = False
+                break
+            if not d.is_final:
+                same = False
+                break
+                
+        if len(self.selected_das) > 0 and not same:
             command = AlignCommand(self, self.selected_das, minute, "Align transcript")
             self.push_to_undo_stack(command)
         else:
@@ -379,7 +402,12 @@ class Annotation(QObject):
 
     @Slot(object)
     def set_problem(self, problem = None):
-        if len(self.selected_das) > 0:
+        same = True
+        for d in self.selected_das:
+            if not d.problem == problem:
+                same = False
+                
+        if len(self.selected_das) > 0 and not same:
             command = SetProblemCommand(self, self.selected_das, problem, f"Set problem {problem}")
             self.push_to_undo_stack(command)
         else:
@@ -424,7 +452,49 @@ class Annotation(QObject):
             else:
                 last_speaker = da.speaker
         self.modified = True
+        
+    def finalize(self):
+        final = True
+        for da in self.selected_das:
+            if not da.is_final:
+                final = False
+                break
+            
+        if len(self.selected_das) > 0 and not final:
+            command = FinalizeCommand(self, self.selected_das, f"Finalize partial")
+            self.push_to_undo_stack(command)
+            
+    def finalizeAll(self):
+        final = True
+        for da in self._das:
+            if da.is_final:
+                final = False
+                break
+            
+        if len(self._das) > 0 and not final:
+            command = FinalizeCommand(self, self._das, f"Finalize all")
+            self.push_to_undo_stack(command)
+            
+        
+class FinalizeCommand(QUndoCommand):
+    def __init__(self, annotation, transcript_rows : set, text: str) -> None:
+        super().__init__(text)
+        self.annotation = annotation
+        self.transcript_rows = transcript_rows
+        self.original_final = {tr : tr.is_final for tr in transcript_rows}
+        
+    def redo(self):
+        for row in self.transcript_rows:
+            if row.minute:
+                row.is_final = True
+        
+        self.annotation.modified = True
 
+    def undo(self):
+        for row in self.transcript_rows:
+            row.is_final = self.original_final[row]
+
+        self.annotation.modified = True
 
 class AlignCommand(QUndoCommand):
     def __init__(self, annotation, transcript_rows : set, minute : Minute, text: str) -> None:
@@ -433,16 +503,19 @@ class AlignCommand(QUndoCommand):
         self.transcript_rows = transcript_rows
         self.new_minute = minute
         self.original_minutes = {tr : tr.minute for tr in transcript_rows}
-
+        self.original_final = {tr : tr.is_final for tr in transcript_rows}
+        
     def redo(self):
         for row in self.transcript_rows:
             row.minute = self.new_minute
+            row.is_final = True
         
         self.annotation.modified = True
 
     def undo(self):
         for row in self.transcript_rows:
             row.minute = self.original_minutes[row]
+            row.is_final = self.original_final[row]
 
         self.annotation.modified = True
 

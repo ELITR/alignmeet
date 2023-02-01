@@ -19,15 +19,45 @@ class Evaluation(QWidget):
         slider_layout = QHBoxLayout()
         layout.addLayout(slider_layout)
 
-        slider_layout.addWidget(QLabel('Document-level adequacy'))
+        adq_layout = QVBoxLayout()
+        adq_layout.addWidget(QLabel('Document-level adequacy'))
         adequacy = QDoubleSpinBox(self)
         adequacy.setMinimum(1)
         adequacy.setMaximum(5)
-        self.adequacy = adequacy
-        slider_layout.addWidget(adequacy)
+        adq_layout.addWidget(adequacy)
+        
+        gram_layout = QVBoxLayout()
+        gram_layout.addWidget(QLabel('grammaticality'))
+        grammaticality = QDoubleSpinBox(self)
+        grammaticality.setMinimum(1)
+        grammaticality.setMaximum(5)
+        gram_layout.addWidget(grammaticality)
+        
+        fluen_layout = QVBoxLayout()
+        fluen_layout.addWidget(QLabel('fluency'))
+        fluency = QDoubleSpinBox(self)
+        fluency.setMinimum(1)
+        fluency.setMaximum(5)
+        fluen_layout.addWidget(fluency)
+        
+        relev_layout = QVBoxLayout()
+        relev_layout.addWidget(QLabel('relevace'))
+        relevance = QDoubleSpinBox(self)
+        relevance.setMinimum(1)
+        relevance.setMaximum(5)
+        relev_layout.addWidget(relevance)
+        
+        slider_layout.addLayout(adq_layout)
+        slider_layout.addLayout(gram_layout)
+        slider_layout.addLayout(fluen_layout)
+        slider_layout.addLayout(relev_layout)
+        
 
         self.items = [
             adequacy,
+            grammaticality,
+            fluency,
+            relevance
         ]
 
         for item in self.items:

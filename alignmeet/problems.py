@@ -26,7 +26,7 @@ class Problems(QWidget):
         self.setLayout(layout)
 
         line_layout = QHBoxLayout()
-        label = QLabel('Problems')
+        label = QLabel('Remarks')
         line_layout.addWidget(label)
 
         empty = QWidget()

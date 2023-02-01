@@ -39,7 +39,7 @@ class Minutes(QWidget):
 
         # current minutes
         label = QLabel(self)
-        label.setText('Summaries:')
+        label.setText('Minutes:')
         label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
         minutes_ver = ComboBox(self)
@@ -50,7 +50,7 @@ class Minutes(QWidget):
         minutes_ver.focused.connect(self.update_minutes)
 
         self.edit = QCheckBox(self)
-        self.edit.setText("edit summarization")
+        self.edit.setText("edit minutes")
         self.edit.setChecked(True)
 
         minutes_layout = QHBoxLayout()

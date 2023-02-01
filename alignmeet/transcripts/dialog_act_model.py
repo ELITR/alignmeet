@@ -113,7 +113,10 @@ class DAModel(QtCore.QAbstractTableModel):
                 if role == Qt.ForegroundRole:
                     return self.annotation.get_minute_text_color(d.minute)
                 else:
-                    return self.annotation.get_minute_color(d.minute)
+                    if d.is_final or j == 0:
+                        return self.annotation.get_minute_color(d.minute)
+                    else:
+                        return None
 
     def flags(self, index):
         j = index.column()
