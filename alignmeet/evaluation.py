@@ -68,7 +68,10 @@ class Evaluation(QWidget):
         if self.prevent:
             return
         self.prevent = True
-        self.annotation._document_level_adequacy = self.adequacy.value()
+        self.annotation._adequacy = self.items[0].value()
+        self.annotation._grammaticality = self.items[1].value()
+        self.annotation._fluency = self.items[2].value()
+        self.annotation._relevance= self.items[3].value()
 
         self.annotation.modified = True
         self.prevent = False
@@ -78,7 +81,7 @@ class Evaluation(QWidget):
         if self.prevent:
             return
         self.prevent = True
-        for v, item in zip([self.annotation._document_level_adequacy,], self.items):
+        for v, item in zip([self.annotation._adequacy, self.annotation._grammaticality, self.annotation._fluency, self.annotation._relevance], self.items):
             item.setValue(v)
         self.prevent = False
 

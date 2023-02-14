@@ -68,6 +68,7 @@ class Minutes(QWidget):
         header = minutes_view.horizontalHeader()
         header.stretchLastSection()
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        
         self.edit.stateChanged.connect(self._editation)
 
         #create toolbar and add all actions to it

@@ -91,7 +91,11 @@ class Annotation(QObject):
 
         self._das = []
         self._minutes = []
-        self._document_level_adequacy = 1.0 #shows up at the bottom, how is it stored in the files?
+        self._adequacy = 1.0
+        self._grammaticality = 1.0
+        self._fluency = 1.0
+        self._relevance = 1.0
+        
         
         self.threshold = 0.5 #for autoalign
 
@@ -275,7 +279,10 @@ class Annotation(QObject):
             self.problems_chaged.emit()
 
     def open_evaluation(self):
-        self._document_level_adequacy = 1.0
+        self._adequacy = 1.0
+        self._grammaticality = 1.0
+        self._fluency = 1.0
+        self._relevance = 1.0
         evaluation_path = path.normpath(path.join(self._path, EVALUATIONS_FOLDER))
         evaluation_prefix = '' if os.path.exists(evaluation_path) else 'evaluation+'
         af = "{}{}+{}".format(
@@ -289,7 +296,18 @@ class Annotation(QObject):
         if path.exists(full_path):
             with open(full_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
-                self._document_level_adequacy = float(lines[0].strip())
+                if SEPARATOR not in lines[0]:
+                    self._adequacy = float(lines[0].strip())
+                    self._grammaticality = 1.0
+                    self._fluency = 1.0
+                    self._relevance = 1.0
+                else:
+                    doclevel = list(map(float, lines[0].strip().split(SEPARATOR)))
+                    self._adequacy = doclevel[0]
+                    self._grammaticality = doclevel[1]
+                    self._fluency = doclevel[2]
+                    self._relevance = doclevel[3]
+                
                 for m, e in zip(self._minutes, lines[1:]):
                     e = list(map(float, e.split(SEPARATOR)))
                     if all(map(lambda x: x > 0, e)):
@@ -368,7 +386,7 @@ class Annotation(QObject):
         full_path = path.join(self._path, EVALUATIONS_FOLDER, af) if os.path.exists(evaluation_path) else path.join(self._path, af)
         full_path = path.normpath(full_path)
         with open(full_path, 'w', encoding='utf-8') as f:
-            f.write(f'{self._document_level_adequacy}\n')
+            f.write(f'{self._adequacy}{SEPARATOR}{self._grammaticality}{SEPARATOR}{self._fluency}{SEPARATOR}{self._relevance}\n')
             for m in self._minutes:
                 if any([d.minute == m for d in self._das]):
                     f.write(f'{m.adequacy}{SEPARATOR}{m.grammaticality}{SEPARATOR}{m.fluency}{SEPARATOR}{m.relevance}\n')
