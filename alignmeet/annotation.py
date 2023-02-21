@@ -3,15 +3,40 @@ import os
 import re
 import glob
 
-from PySide2.QtCore import Signal, Slot, QObject
+from PySide2.QtCore import Signal, Slot, QObject, QThread
 from PySide2.QtGui import QColor
 from PySide2.QtWidgets import QMessageBox, QUndoStack, QUndoView, QUndoCommand
+from .autoalign import Aligner, Embedder
 
 SEPARATOR = '^'
 TRANSCRIPT_FOLDER = 'transcripts'
 MINUTES_FOLDER = 'minutes'
 ANNOTATIONS_FOLDER = 'annotations'
 EVALUATIONS_FOLDER = 'evaluations'
+
+class MinuteEmbedThread(QThread):
+        finished = Signal(list, str)
+        def __init__(self, annotation, filename):
+            super().__init__()
+            self.annotation = annotation
+            self.filename = filename
+            
+        def run(self):
+            e = Embedder()
+            embeds = e.embed(self.annotation._minutes)
+            self.finished.emit(list(embeds), self.filename)
+            
+class TranscriptEmbedThread(QThread):
+        finished = Signal(list, str)
+        def __init__(self, annotation, filename):
+            super().__init__()
+            self.annotation = annotation
+            self.filename = filename
+            
+        def run(self):
+            e = Embedder()
+            embeds = e.embed(self.annotation._das)
+            self.finished.emit(list(embeds), self.filename)
 
 class Minute:
     # class for data of a single minute line
@@ -27,6 +52,7 @@ class Minute:
         self.grammaticality = 1.0
         self.adequacy = 1.0
         self.relevance = 1.0
+        self.embed = None
 
     @property
     def id(self):
@@ -53,6 +79,7 @@ class DialogAct:
         self.problem = problem
         self.start = float(start)
         self.end = float(end)
+        self.embed = None
 
     def time_valid(self):
         return self.start > -1 and self.end > -1
@@ -75,8 +102,11 @@ class Annotation(QObject):
     redo_toggle = Signal(bool)
     problems_chaged = Signal()
 
-    def __init__(self, undo = True, parent = None):
+    def __init__(self, annotations, undo = True, parent = None):
         super(Annotation, self).__init__(parent)
+        
+        self.annotations = annotations
+        
         self._path = ""
         self._modified = False
         self._transcript_file = None
@@ -95,6 +125,11 @@ class Annotation(QObject):
         self._grammaticality = 1.0
         self._fluency = 1.0
         self._relevance = 1.0
+        
+        self.tr_thread = None
+        self.min_thread = None
+        self.tr_embed_done = False
+        self.min_embed_done = False
         
         
         self.threshold = 0.5 #for autoalign
@@ -190,7 +225,38 @@ class Annotation(QObject):
             msg.exec_()
             raise Exception('save changes first')
 
+    @Slot(list, str)
+    def finalize_tr_embed(self, embeds, filename, save=True):
+        if save:
+            Embedder.saveEmbed(embeds, filename + '.embed')
+        
+        tr_ver = self.annotations.transcripts.transcript_ver
+        # print(tr_ver.itemData(tr_ver.currentIndex()))
+        # print(filename)
+        # if filename == tr_ver.itemData(tr_ver.currentIndex()):
+        for da, embed in zip(self._das, embeds):
+            da.embed = embed
+        self.tr_embed_done = True
+        self.check_aa_action()
+                
+    @Slot(list, str)
+    def finalize_min_embed(self, embeds, filename, save=True):
+        if save:
+            Embedder.saveEmbed(embeds, filename + '.embed')
+        
+        min_ver = self.annotations.minutes.minutes_ver
+        # if filename == min_ver.itemData(min_ver.currentIndex()):
+        for min, embed in zip(self._minutes, embeds):
+            min.embed = embed
+        self.min_embed_done = True
+        self.check_aa_action()
+        
+    def check_aa_action(self):
+        self.annotations.autoalignAction.setEnabled(self.tr_embed_done and self.min_embed_done)
+
     def open_transcript(self, file):
+        self.tr_embed_done = False
+        self.annotations.autoalignAction.setEnabled(False)
         self._prevent()
         self._transcript_file = file
         full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, file))
@@ -207,11 +273,24 @@ class Annotation(QObject):
                 data.append(DialogAct(*s))
 
         self._das = data
+        
+        if os.path.exists(full_path + '.embed'):
+            embeds = Embedder.loadEmbed(full_path + '.embed')
+            self.finalize_tr_embed(embeds, full_path, False)
+        else:
+            if self.tr_thread:
+                self.tr_thread.terminate()
+            self.tr_thread = TranscriptEmbedThread(self, full_path)
+            self.tr_thread.finished.connect(self.finalize_tr_embed)
+            self.tr_thread.start()
+        
         self.open_annotation()
         self.open_evaluation()
         self.modified = False
 
     def open_minutes(self, file):
+        self.min_embed_done = False
+        self.annotations.autoalignAction.setEnabled(False)
         self._prevent()
         self._minutes_file = file
         full_path = path.normpath(path.join(self._path, MINUTES_FOLDER, file))
@@ -226,6 +305,17 @@ class Annotation(QObject):
         except:
             pass
         self._minutes = data
+        
+        if os.path.exists(full_path + '.embed'):
+            embeds = Embedder.loadEmbed(full_path + '.embed')
+            self.finalize_min_embed(embeds, full_path, False)
+        else:
+            if self.min_thread:
+                self.min_thread.terminate()
+            self.min_thread = MinuteEmbedThread(self, full_path)
+            self.min_thread.finished.connect(self.finalize_min_embed)
+            self.min_thread.start()
+        
         self._make_minutes_index_map()
         self.open_annotation()
         self.open_evaluation()

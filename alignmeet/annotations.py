@@ -5,8 +5,8 @@ import glob
 import subprocess
 from subprocess import Popen
 
-from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog, QAction, QToolBar, QDialog, QDialogButtonBox, QLabel, QLineEdit
-from PySide2.QtCore import Slot, Qt, QSettings, Signal, QRunnable, QThreadPool
+from PySide2.QtWidgets import QApplication, QMainWindow, QHBoxLayout, QWidget, QFileDialog, QMessageBox, QSplitter, QSizePolicy, QVBoxLayout, QProgressDialog, QAction, QToolBar, QDialog, QDialogButtonBox, QLabel, QLineEdit, QDoubleSpinBox
+from PySide2.QtCore import Slot, Qt, QSettings, Signal, QThread # QRunnable, QThreadPool
 from PySide2.QtGui import QIcon
 
 from .transcripts.transcripts import Transcripts
@@ -16,27 +16,7 @@ from .annotation import Annotation
 from .problems import Problems
 from .settings import Settings
 from .evaluation import Evaluation
-from .autoalign import Aligner, Embedder
-
-class EmbedWorker(QRunnable):
-        def __init__(self, annotation):
-            super().__init__()
-            self.annotation = annotation
-            self.finished = Signal()
-            
-        @Slot()
-        def run(self):
-            e = Embedder()
-            tr_embeds = []
-            min_embeds = []
-            for tr in self.annotation._das:
-                tr_embeds.append(e.embed(tr))
-            self.annotation.tr_embeds = tr_embeds
-            for min in self.annotation._minutes:
-                min_embeds.append(e.embed(min))
-            self.annotation.min_embeds = min_embeds
-            self.finished.emit()
-            
+from .autoalign import Aligner
 
 class Annotations(QMainWindow):
     # main app window class 
@@ -53,7 +33,6 @@ class Annotations(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.is_git = False
         self.new_problem = ''
-        self.embed_running = False
 
     def _gui_setup(self):
         layout = QHBoxLayout()
@@ -62,7 +41,7 @@ class Annotations(QMainWindow):
         panel_right = QWidget(self)
         layout.addWidget(splitter)
 
-        annotation = Annotation()
+        annotation = Annotation(self)
         self.annotation = annotation
         self.annotation.undo_stack.canRedoChanged.connect(self._redo_toggle)
         self.annotation.undo_stack.canUndoChanged.connect(self._undo_toggle)
@@ -129,7 +108,6 @@ class Annotations(QMainWindow):
         self.openAudioAction        = self._createAction('&Open audio', 'Alt+o', self._open_audio)
         self.autoalignAction        = self._createAction('&Autoalign', 'Alt+a', self._autoalign)
         self.autoalignAction.setEnabled(False)
-        self.aaSettingsAction       = self._createAction('&Settings...', '', self._aaSettings)
         self.aaFinalizeAction       = self._createAction('&Finalize', 'Alt+f', self._aaFinalize)
         self.aaFinalizeAction.setEnabled(False)
         self.aaFinalizeAllAction    = self._createAction('Fi&nalize all', '', self._aaFinalizeAll)
@@ -189,9 +167,8 @@ class Annotations(QMainWindow):
         playback_menu.addActions(player.playback_actions)
         
         autoalign_menu = menu.addMenu('&Autoalign')
-        #autoalign_menu.addAction(self.autoalignAction)
-        #autoalign_menu.addAction(self.aaSettings)
-        #autoalign_menu.addSeparator()
+        autoalign_menu.addAction(self.autoalignAction)
+        autoalign_menu.addSeparator()
         autoalign_menu.addAction(self.aaFinalizeAction)
         autoalign_menu.addAction(self.aaFinalizeAllAction)        
 
@@ -203,9 +180,24 @@ class Annotations(QMainWindow):
         toolbar.addAction(self.redoAction)
         toolbar.addSeparator()
         toolbar.addAction(self.evalModeAction)
+        
+        toolbar.addSeparator()
+        toolbar.addAction(self.autoalignAction)
+        
+        thr = QDoubleSpinBox(self)
+        thr.setMinimum(0)
+        thr.setMaximum(1)
+        thr.setDecimals(1)
+        thr.setSingleStep(0.1)
+        thr.setValue(0.5)
+        thr.valueChanged.connect(self._setThr)
+        
+        toolbar.addWidget(thr)
+        
         toolbar.addSeparator()
         toolbar.addAction(self.aaFinalizeAction)
         toolbar.addAction(self.aaFinalizeAllAction)
+        
         self.toolbar = toolbar
 
         # Set up settings for saving layout upon close
@@ -372,7 +364,6 @@ class Annotations(QMainWindow):
                                 break
                 self.is_git = False
                 self.saveAction.setEnabled(True)
-                self.autoalignAction.setEnabled(True)
                 self.aaFinalizeAction.setEnabled(True)
                 self.aaFinalizeAllAction.setEnabled(True)
                 self.problems.addProblemAction.setEnabled(True)
@@ -476,17 +467,14 @@ class Annotations(QMainWindow):
         self.annotation.undo_view.close()
         return super().closeEvent(event)
     
+    @Slot(int)
+    def _setThr(self, thr):
+        self.annotation.threshold = thr
+    
     @Slot()
     def _autoalign(self):
-        pass
-    
-    @Slot()
-    def _aaSettings(self):
-        pass
-    
-    @Slot()
-    def _aaSettings(self):
-        pass
+        Aligner.align_inbuilt(self.annotation._das, self.annotation._minutes, self.annotation.threshold)
+        self.annotation.modified = True
     
     @Slot()
     def _aaFinalize(self):

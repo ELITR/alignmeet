@@ -2,7 +2,6 @@ import numpy as np
 from scipy.spatial.distance import cosine
 from sentence_transformers import SentenceTransformer
 import pickle
-#TODO: dependencies
 
 class Embedder:
     def __init__(self, model = 'stsb-mpnet-base-v2'):
@@ -16,7 +15,7 @@ class Embedder:
     @staticmethod
     def saveEmbed(embeds, filename):
         with open(filename, 'wb') as f:
-            pickle.dump(embeds, f) #TODO: do this properly
+            pickle.dump(embeds, f)
     
     @staticmethod
     def loadEmbed(filename):
@@ -35,13 +34,34 @@ class Aligner:
             if sims.min() < threshold:
                 alignments[i] = np.argmin(sims) + 1
         for i, alignment in enumerate(alignments):
-            if transcript_das[i].minute == None or transcript_das[i].is_tentative or disregard_existing_align:
+            if transcript_das[i].minute == None or not transcript_das[i].is_final or disregard_existing_align:
                 if alignment == 0:
                     transcript_das[i].minute = None
-                    transcript_das[i].is_tentative = False
+                    transcript_das[i].is_final = True
                 else:
                     transcript_das[i].minute = minutes[alignment-1]
-                    transcript_das[i].is_tentative = not final
+                    transcript_das[i].is_fianl = final
+                    
+    def align_inbuilt(transcript_das, minutes, threshold = 0.5, disregard_existing_align = False, final=False):
+        alignments = np.zeros(len(transcript_das))
+        for i, da in enumerate(transcript_das):
+            te = da.embed
+            if not isinstance(te, np.ndarray):
+                continue
+            sims = np.ones(len(minutes))
+            for j, min in enumerate(minutes):
+                if isinstance(min.embed, np.ndarray):
+                    sims[j] = cosine(te, min.embed)
+            if sims.min() < threshold:
+                alignments[i] = np.argmin(sims) + 1
+        for i, alignment in enumerate(alignments):
+            if transcript_das[i].minute == None or not transcript_das[i].is_final or disregard_existing_align:
+                if alignment == 0:
+                    transcript_das[i].minute = None
+                    transcript_das[i].is_final = True
+                else:
+                    transcript_das[i].minute = minutes[int(alignment)-1]
+                    transcript_das[i].is_final = final
     
     @staticmethod       
     def align(transcript_emb, minutes_emb, threshold = 0.5):
