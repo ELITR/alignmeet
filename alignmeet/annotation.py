@@ -356,7 +356,10 @@ class Annotation(QObject):
                         problem = int(line[2]) - 1 if num >= 0 else None
                     elif len(line[2]) >= 2 and line[2][:2] == '0:':
                         #custom problem
-                        problem = line[2][2:]
+                        if len(line) > 3: # space in custom problem
+                            problem = line[2][2:] + ' ' + ' '.join(line[3:])
+                        else:
+                            problem = line[2][2:]
                     else:
                         problem = None
 
