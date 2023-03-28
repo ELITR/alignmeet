@@ -1,4 +1,5 @@
 from copy import copy
+import os
 
 from PySide2.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QHBoxLayout, QCheckBox, QAbstractItemView, QSizePolicy, QAction, QUndoCommand, QToolBar
 from PySide2.QtCore import QSettings, Slot, Qt, Signal
@@ -79,30 +80,30 @@ class Minutes(QWidget):
 
         self.insertingAction = QAction('Insert line below', minutes_view)
         self.insertingAction.setShortcuts(['alt+I', '+Insert'])
-        self.insertingAction.setIcon(QIcon("alignmeet/icons/layout-split-vertical.png"))
+        self.insertingAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"../icons/layout-split-vertical.png")))
         self.insertingAction.setToolTip('Insert row (Alt+I)')
         self.insertingAction.triggered.connect(self._insert_triggered)
         self.toolbar.addAction(self.insertingAction)
 
         self.deleteAction = QAction('Delete', minutes_view)
         self.deleteAction.setShortcuts(['alt+D', 'alt+Del'])
-        self.deleteAction.setIcon(QIcon("alignmeet/icons/layout-join-vertical.png"))
+        self.deleteAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"../icons/layout-join-vertical.png")))
         self.deleteAction.setToolTip("Delete row (Alt+D)")
         self.deleteAction.triggered.connect(self._delete_triggered)
         self.toolbar.addAction(self.deleteAction)
 
         self.joinDownAction = QAction('Join down', minutes_view)
-        self.joinDownAction.setIcon(QIcon("alignmeet/icons/arrow-stop-270.png"))
+        self.joinDownAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"../icons/arrow-stop-270.png")))
         self.joinDownAction.triggered.connect(self._join_down_triggerd)
         self.toolbar.addAction(self.joinDownAction)
 
         self.joinUpAction = QAction('Join up', minutes_view)
-        self.joinUpAction.setIcon(QIcon("alignmeet/icons/arrow-stop-090.png"))
+        self.joinUpAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"../icons/arrow-stop-090.png")))
         self.joinUpAction.triggered.connect(self._join_up_triggerd)
         self.toolbar.addAction(self.joinUpAction)
 
         self.splitAction = QAction('Split at cursor (Ctrl+Enter)', minutes_view)
-        self.splitAction.setIcon(QIcon("alignmeet/icons/arrow-split-270.png"))
+        self.splitAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"../icons/arrow-split-270.png")))
         self.splitAction.triggered.connect(self._split_triggered)
         self.toolbar.addAction(self.splitAction)
 
