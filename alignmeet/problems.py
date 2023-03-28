@@ -3,6 +3,8 @@ from PySide2.QtCore import Signal, Slot, Qt
 from PySide2.QtGui import QIcon
 from .annotation import Annotation
 
+import os
+
 PROBLEMS = [
         'Organizational',
         'Speech incomprehensible',
@@ -38,14 +40,14 @@ class Problems(QWidget):
         line_layout.addWidget(self.toolbar)
 
         self.addProblemAction = QAction('&Add problem')
-        self.addProblemAction.setIcon(QIcon("alignmeet/icons/plus.png"))
+        self.addProblemAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"icons/plus.png")))
         self.addProblemAction.setEnabled(False)
         self.addProblemAction.triggered.connect(self.new_problem)
         self.toolbar.addAction(self.addProblemAction)
 
         self.refreshProblemsAction = QAction('&Refresh problems')
         self.refreshProblemsAction.setShortcut('ctrl+r')
-        self.refreshProblemsAction.setIcon(QIcon("alignmeet/icons/arrow-circle-315.png"))
+        self.refreshProblemsAction.setIcon(QIcon(os.path.join(os.path.dirname(__file__),"icons/arrow-circle-315.png")))
         self.refreshProblemsAction.setEnabled(False)
         self.refreshProblemsAction.triggered.connect(self.refresh)
         self.toolbar.addAction(self.refreshProblemsAction)

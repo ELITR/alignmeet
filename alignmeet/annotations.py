@@ -65,7 +65,7 @@ class Annotations(QMainWindow):
         problems.problem_selected.connect(self.annotation.set_problem)
         problems.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.problems = problems
-        annotation.problems_chaged.connect(problems.refresh)
+        annotation.problems_changed.connect(problems.refresh)
         
         splitter_right = QSplitter(Qt.Vertical)
         splitter_right.addWidget(minutes)

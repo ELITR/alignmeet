@@ -100,7 +100,7 @@ class Annotation(QObject):
     path_changed = Signal()
     undo_toggle = Signal(bool)
     redo_toggle = Signal(bool)
-    problems_chaged = Signal()
+    problems_changed = Signal()
 
     def __init__(self, annotations, undo = True, parent = None):
         super(Annotation, self).__init__(parent)
@@ -369,7 +369,7 @@ class Annotation(QObject):
                         d.minute = self._minutes[minute]
                     except:
                         d.minute = None
-            self.problems_chaged.emit()
+            self.problems_changed.emit()
 
     def open_evaluation(self):
         self._adequacy = 1.0
@@ -642,10 +642,12 @@ class SetProblemCommand(QUndoCommand):
         for row in self.transcript_rows:
             row.problem = self.new_problem
         
+        self.annotation.problems_changed.emit()
         self.annotation.modified = True
 
     def undo(self):
         for row in self.transcript_rows:
             row.problem = self.original_problems[row]
 
+        self.annotation.problems_changed.emit()
         self.annotation.modified = True
