@@ -230,7 +230,7 @@ class Annotation(QObject):
         if save:
             Embedder.saveEmbed(embeds, filename + '.embed')
         
-        tr_ver = self.annotations.transcripts.transcript_ver
+        # tr_ver = self.annotations.transcripts.transcript_ver
         # print(tr_ver.itemData(tr_ver.currentIndex()))
         # print(filename)
         # if filename == tr_ver.itemData(tr_ver.currentIndex()):
@@ -244,7 +244,7 @@ class Annotation(QObject):
         if save:
             Embedder.saveEmbed(embeds, filename + '.embed')
         
-        min_ver = self.annotations.minutes.minutes_ver
+        # min_ver = self.annotations.minutes.minutes_ver
         # if filename == min_ver.itemData(min_ver.currentIndex()):
         for min, embed in zip(self._minutes, embeds):
             min.embed = embed
@@ -252,11 +252,13 @@ class Annotation(QObject):
         self.check_aa_action()
         
     def check_aa_action(self):
-        self.annotations.autoalignAction.setEnabled(self.tr_embed_done and self.min_embed_done)
+        if self.annotations:
+            self.annotations.autoalignAction.setEnabled(self.tr_embed_done and self.min_embed_done)
 
     def open_transcript(self, file):
         self.tr_embed_done = False
-        self.annotations.autoalignAction.setEnabled(False)
+        if self.annotations:
+            self.annotations.autoalignAction.setEnabled(False)
         self._prevent()
         self._transcript_file = file
         full_path = path.normpath(path.join(self._path, TRANSCRIPT_FOLDER, file))
@@ -290,7 +292,8 @@ class Annotation(QObject):
 
     def open_minutes(self, file):
         self.min_embed_done = False
-        self.annotations.autoalignAction.setEnabled(False)
+        if self.annotations:
+            self.annotations.autoalignAction.setEnabled(False)
         self._prevent()
         self._minutes_file = file
         full_path = path.normpath(path.join(self._path, MINUTES_FOLDER, file))

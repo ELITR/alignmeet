@@ -59,7 +59,7 @@ def main():
     if args.et:
         print("Preparing embedder...")
         e = Embedder()
-        a = Annotation(False)
+        a = Annotation(None, False)
         a.set_path('.') #TODO: make sure this actually works lmao, will need to implement abs. paths
         for file in args.et:
             print(f"Embedding {file}...")
@@ -67,7 +67,7 @@ def main():
     elif args.em:
         print("Preparing embedder...")
         e = Embedder()
-        a = Annotation(False)
+        a = Annotation(None, False)
         a.set_path('.')
         for file in args.em:
             print(f"Embedding {file}...")
