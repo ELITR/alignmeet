@@ -473,8 +473,7 @@ class Annotations(QMainWindow):
     
     @Slot()
     def _autoalign(self):
-        Aligner.align_inbuilt(self.annotation._das, self.annotation._minutes, self.annotation.threshold)
-        self.annotation.modified = True
+        self.annotation.autoalign()
     
     @Slot()
     def _aaFinalize(self):

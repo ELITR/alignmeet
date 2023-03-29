@@ -259,7 +259,7 @@ class Minutes(QWidget):
     def _minutes_changed(self):
         self.annotation.undo_stack.clear()
         self.annotation.open_minutes(self.minutes_ver.currentText())
-        self.annotation.problems_chaged.emit()
+        self.annotation.problems_changed.emit()
 
 class TableView(Transcript):
     minute_selected = Signal(int)

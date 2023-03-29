@@ -486,6 +486,9 @@ class Annotation(QObject):
                 else:
                     f.write(f'{-1}{SEPARATOR}{-1}{SEPARATOR}{-1}\n')
 
+    def autoalign(self):
+        Aligner.align_inbuilt(self._das, self._minutes, self.threshold)
+        self.modified = True
 
     def save(self):
         self._save_annotation()
@@ -651,3 +654,6 @@ class SetProblemCommand(QUndoCommand):
 
         self.annotation.problems_changed.emit()
         self.annotation.modified = True
+        
+class AutoalignCommand(QUndoCommand):
+    pass

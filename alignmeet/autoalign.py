@@ -41,7 +41,8 @@ class Aligner:
                 else:
                     transcript_das[i].minute = minutes[alignment-1]
                     transcript_das[i].is_fianl = final
-                    
+          
+    @staticmethod          
     def align_inbuilt(transcript_das, minutes, threshold = 0.5, disregard_existing_align = False, final=False):
         alignments = np.zeros(len(transcript_das))
         for i, da in enumerate(transcript_das):

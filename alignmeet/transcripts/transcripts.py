@@ -382,7 +382,7 @@ class Transcripts(QWidget):
     def _transcript_changed(self):
         self.annotation.undo_stack.clear()
         self.annotation.open_transcript(self.transcript_ver.currentText())
-        self.annotation.problems_chaged.emit()
+        self.annotation.problems_changed.emit()
 
 class InsertCommand(QUndoCommand):
     def __init__(self, transcripts, row_index, new_da, text : str):
