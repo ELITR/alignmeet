@@ -19,7 +19,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        "numpy", "PySide2", "python-vlc"
+        "numpy", "PySide2", "python-vlc", "scipy", "sentence_transformers"
     ],
     entry_points={"console_scripts": ["alignmeet=alignmeet.__main__:main"]},
 )
