@@ -109,7 +109,7 @@ class MinutesModel(QtCore.QAbstractTableModel):
             if self.annotation.is_minute_visible(m):
                 return self.annotation.get_minute_color(m)
         elif role == Qt.ForegroundRole:
-            if self.annotation.is_minute_visible(m):                
+            if self.annotation.is_minute_visible(m):
                 return self.annotation.get_minute_text_color(m)
         else:
             return None

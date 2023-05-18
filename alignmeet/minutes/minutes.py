@@ -229,8 +229,8 @@ class Minutes(QWidget):
             self.minutes_view.setEditTriggers(QAbstractItemView.NoEditTriggers)
 
     def _minute_selected(self, m):
-        if self._evaluation_mode:
-            return
+    #     if self._evaluation_mode:
+    #         return
         if self.edit.isChecked():
             self.deleteAction.setEnabled(True)
             return
@@ -259,6 +259,7 @@ class Minutes(QWidget):
     def _minutes_changed(self):
         self.annotation.undo_stack.clear()
         self.annotation.open_minutes(self.minutes_ver.currentText())
+        self.annotation.copy_problems_if_none_presend()
         self.annotation.problems_changed.emit()
 
 class TableView(Transcript):

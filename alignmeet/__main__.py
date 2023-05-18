@@ -49,6 +49,7 @@ def main():
     
     parser = argparse.ArgumentParser(prog='Alignmeet', description="Annotation Tool for Meeting Minuting", epilog="Or run without arguments for annotation GUI.")
     group = parser.add_mutually_exclusive_group()
+    group.add_argument('--autoembed', dest='autoembed', action='store_true', help='Run GUI with autoembed.')
     group.add_argument('-et', dest='et', metavar='Filename', type=str, nargs='+', help='Generate embeddings for given transcripts.')
     group.add_argument('-em', dest='em', metavar='Filename', type=str, nargs='+', help='Generate embeddings for given minutes files.')
     group.add_argument('-a', '--align', dest='a', metavar=('Minutes_Embed', 'Transcript_Embed'), type=str, nargs=2, help='Generate alignment based on given file embeddings.')
@@ -102,6 +103,8 @@ def main():
 
         Settings.apply_settings()
         a = Annotations()
+        a.setAutoembed(args.autoembed)
+            
         a.show()
 
         exit(app.exec_())

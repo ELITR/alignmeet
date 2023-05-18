@@ -9,6 +9,7 @@ class Embedder:
         self.model = SentenceTransformer(model)
         
     def embed(self, lines):
+        return
         embeds = self.model.encode([l.text for l in lines])
         return embeds
     

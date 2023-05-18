@@ -33,6 +33,9 @@ class Annotations(QMainWindow):
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.is_git = False
         self.new_problem = ''
+        
+    def setAutoembed(self, autoembed):
+        self.autoembed = autoembed
 
     def _gui_setup(self):
         layout = QHBoxLayout()

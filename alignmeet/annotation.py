@@ -24,7 +24,8 @@ class MinuteEmbedThread(QThread):
         def run(self):
             e = Embedder()
             embeds = e.embed(self.annotation._minutes)
-            self.finished.emit(list(embeds), self.filename)
+            if embeds:
+                self.finished.emit(list(embeds), self.filename)
             
 class TranscriptEmbedThread(QThread):
         finished = Signal(list, str)
@@ -131,8 +132,9 @@ class Annotation(QObject):
         self.tr_embed_done = False
         self.min_embed_done = False
         
-        
         self.threshold = 0.5 #for autoalign
+
+        self.remarks_backup = None
 
         if undo:
             self.undo_stack = QUndoStack(self) # stores QUndoCommands (user actions) that can be undone/redone
@@ -279,7 +281,7 @@ class Annotation(QObject):
         if os.path.exists(full_path + '.embed'):
             embeds = Embedder.loadEmbed(full_path + '.embed')
             self.finalize_tr_embed(embeds, full_path, False)
-        else:
+        elif self.annotations.autoembed:
             if self.tr_thread:
                 self.tr_thread.terminate()
             self.tr_thread = TranscriptEmbedThread(self, full_path)
@@ -294,7 +296,7 @@ class Annotation(QObject):
         self.min_embed_done = False
         if self.annotations:
             self.annotations.autoalignAction.setEnabled(False)
-        self._prevent()
+        #self._prevent()
         self._minutes_file = file
         full_path = path.normpath(path.join(self._path, MINUTES_FOLDER, file))
         if not os.path.exists(full_path):
@@ -312,7 +314,7 @@ class Annotation(QObject):
         if os.path.exists(full_path + '.embed'):
             embeds = Embedder.loadEmbed(full_path + '.embed')
             self.finalize_min_embed(embeds, full_path, False)
-        else:
+        elif self.annotations.autoembed:
             if self.min_thread:
                 self.min_thread.terminate()
             self.min_thread = MinuteEmbedThread(self, full_path)
@@ -325,6 +327,9 @@ class Annotation(QObject):
         self.modified = False
 
     def open_annotation(self):
+        if not self._das == []:
+            self.remarks_backup = [d.problem for d in self._das]
+        
         for d in self._das:
             d.problem = None
             d.minute = None
@@ -373,6 +378,16 @@ class Annotation(QObject):
                     except:
                         d.minute = None
             self.problems_changed.emit()
+            
+    def copy_problems_if_none_presend(self):
+        if not self.remarks_backup or not len(self._das) == len(self.remarks_backup):
+            return
+        untouched = set([d.problem == None for d in self._das])
+        if True in untouched and not False in untouched:
+            for i, d in enumerate(self._das):
+                d.problem = self.remarks_backup[i]
+            self.problems_changed.emit()
+            self.modified = True
 
     def open_evaluation(self):
         self._adequacy = 1.0
@@ -459,7 +474,7 @@ class Annotation(QObject):
                     midx = self.minutes_index_map[da.minute]
                     if isinstance(da.problem, str):
                         problem = f'0:{da.problem}'
-                    elif da.problem:
+                    elif not da.problem is None:
                         problem = da.problem + 1
                     else:
                         problem = None

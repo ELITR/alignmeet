@@ -13,7 +13,7 @@ class DAModel(QtCore.QAbstractTableModel):
         self.annotation.modified_changed.connect(self.update)
         self.setHeaderData(0, Qt.Horizontal, "Speaker")
         self.setHeaderData(1, Qt.Horizontal, "Transcript")
-        self.setHeaderData(2, Qt.Horizontal, "Problem")
+        self.setHeaderData(2, Qt.Horizontal, "Remark")
         self.highlight = None
     
     @Slot()
@@ -33,9 +33,9 @@ class DAModel(QtCore.QAbstractTableModel):
                 if index == 0:
                     return 'Speaker'
                 elif index == 1:
-                    return 'Dialog Act'
+                    return 'Transcript'
                 else:
-                    return 'Problem'
+                    return 'Remark'
             elif orientation == Qt.Vertical:
                 if self.annotation.das_count() > index:
                     d = self.annotation.get_dialog_act(index)

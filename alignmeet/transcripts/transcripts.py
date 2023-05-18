@@ -93,9 +93,9 @@ class Transcripts(QWidget):
         transcript.addAction(self.resetAction)
         self.toolbar.addAction(self.resetAction)
         
-        self.resetpAction = QAction('Reset problems', transcript)
+        self.resetpAction = QAction('Reset remarks', transcript)
         self.resetpAction.setShortcuts(['Ctrl+p'])
-        self.resetpAction.setToolTip('Reset problems (Ctrl+p)')
+        self.resetpAction.setToolTip('Reset remarks (Ctrl+p)')
         self.resetpAction.triggered.connect(self._resetp_triggered)
         transcript.addAction(self.resetpAction)
         self.toolbar.addAction(self.resetpAction)
@@ -109,7 +109,7 @@ class Transcripts(QWidget):
         self.edit.stateChanged.connect(self._editation)
         # parse_layout.addStretch()
 
-        self.problems = QCheckBox('show problems')
+        self.problems = QCheckBox('show remarks')
         self.problems.setChecked(True)
 
         self.toolbar.addWidget(self.edit)
