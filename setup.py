@@ -8,7 +8,7 @@ HERE = os.path.abspath(os.path.dirname(__file__))
     
 setup(
     name="alignmeet",
-    version="1.0.8",
+    version="1.0.9",
     description="A Comprehensive Tool for Meeting Alignment, Annotation and Evaluation",
 #    long_description=README,
 #    long_description_content_type="text/markdown",
